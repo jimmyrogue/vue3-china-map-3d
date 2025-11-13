@@ -6,7 +6,7 @@ import './assets/styles/index.css'
 export { Map3D }
 
 // 导出资源配置函数
-export { setAssetsBasePath, resetAssetsBasePath } from './core/config/asset-config'
+export { setAssetsBasePath, resetAssetsBasePath, setDebugMode } from './core/config/asset-config'
 
 // 导出类型
 export type { CityBoardDatum, CityDistrictDatum } from './core/zhejiangCityBoards'
