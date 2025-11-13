@@ -1,16 +1,7 @@
 import type { FeatureCollection } from 'geojson'
+import { getAssetUrl } from '../config/asset-config'
 
 type GeoLoader = () => Promise<{ default: FeatureCollection }>
-
-// 使用相对于包根目录的路径
-const getAssetUrl = (path: string) => {
-  // 在开发模式下，使用 Vite 的资源处理
-  if (import.meta.env.DEV) {
-    return new URL(`../../assets/${path}`, import.meta.url).href
-  }
-  // 在生产模式下，使用相对路径
-  return `./assets/${path}`
-}
 
 const cityGeoLoaders: Record<string, GeoLoader> = {
   杭州市: () => import('../../assets/geo/hangzhoudistrict.json'),

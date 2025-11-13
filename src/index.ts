@@ -5,6 +5,9 @@ import './assets/styles/index.css'
 // 导出组件
 export { Map3D }
 
+// 导出资源配置函数
+export { setAssetsBasePath, resetAssetsBasePath } from './core/config/asset-config'
+
 // 导出类型
 export type { CityBoardDatum, CityDistrictDatum } from './core/zhejiangCityBoards'
 export type { ZhejiangMapSceneOptions, ZhejiangMapSceneMountOptions } from './core/scene/zhejiang-map-scene'

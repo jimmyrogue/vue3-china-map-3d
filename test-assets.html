@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资源加载测试 - Vue3 China Map 3D</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f9f9f9;
+      border-left: 4px solid #2196F3;
+    }
+    .test-result {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .image-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .image-card {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      background: white;
+    }
+    .image-card img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .image-card .status {
+      margin-top: 8px;
+      font-size: 12px;
+      text-align: center;
+    }
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗺️ Vue3 China Map 3D - 资源加载测试</h1>
+
+    <div class="test-section">
+      <h2>📍 当前环境信息</h2>
+      <div id="env-info"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>🔧 资源路径配置</h2>
+      <p>当前资源基础路径：<code id="base-path">默认（自动检测）</code></p>
+      <div>
+        <input type="text" id="custom-path" placeholder="输入自定义路径，例如：/static/assets" style="width: 400px; padding: 8px;">
+        <button onclick="setCustomPath()">设置自定义路径</button>
+        <button onclick="resetPath()">重置为默认</button>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>🧪 资源 URL 生成测试</h2>
+      <button onclick="testUrlGeneration()">测试 URL 生成</button>
+      <div id="url-test-results"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>🖼️ 图片加载测试</h2>
+      <button onclick="testImageLoading()">测试图片加载</button>
+      <div id="image-test-results"></div>
+      <div id="image-preview" class="image-preview"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>📊 测试报告</h2>
+      <div id="test-report"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    // 模拟资源 URL 生成逻辑（与实际包中的逻辑一致）
+    let customBasePath = null;
+
+    function getAssetUrl(path) {
+      if (customBasePath) {
+        return `${customBasePath}/${path}`;
+      }
+
+      // 模拟生产环境的路径生成
+      const currentUrl = window.location.href;
+      const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
+      return `${baseUrl}/dist/assets/${path}`;
+    }
+
+    // 显示环境信息
+    function showEnvInfo() {
+      const info = {
+        'URL': window.location.href,
+        'Protocol': window.location.protocol,
+        'Host': window.location.host,
+        'Pathname': window.location.pathname,
+        'User Agent': navigator.userAgent.split(' ').slice(-2).join(' ')
+      };
+
+      const html = Object.entries(info).map(([key, value]) =>
+        `<div class="test-result info"><strong>${key}:</strong> ${value}</div>`
+      ).join('');
+
+      document.getElementById('env-info').innerHTML = html;
+    }
+
+    // 设置自定义路径
+    window.setCustomPath = function() {
+      const input = document.getElementById('custom-path');
+      customBasePath = input.value.trim();
+      document.getElementById('base-path').textContent = customBasePath || '默认（自动检测）';
+
+      const result = document.createElement('div');
+      result.className = 'test-result success';
+      result.textContent = `✅ 已设置自定义路径: ${customBasePath}`;
+      document.getElementById('url-test-results').prepend(result);
+    };
+
+    // 重置路径
+    window.resetPath = function() {
+      customBasePath = null;
+      document.getElementById('custom-path').value = '';
+      document.getElementById('base-path').textContent = '默认（自动检测）';
+
+      const result = document.createElement('div');
+      result.className = 'test-result info';
+      result.textContent = '🔄 已重置为默认路径';
+      document.getElementById('url-test-results').prepend(result);
+    };
+
+    // 测试 URL 生成
+    window.testUrlGeneration = function() {
+      const testPaths = [
+        'textures/zhejiang/baseColor.png',
+        'textures/zhejiang/normal.jpg',
+        'images/city/hangzhou.jpg',
+        'images/city/ningbo.jpg',
+        'geo/zhejiang.json'
+      ];
+
+      const results = testPaths.map(path => {
+        const url = getAssetUrl(path);
+        return `
+          <div class="test-result info">
+            <strong>路径:</strong> ${path}<br>
+            <strong>生成的 URL:</strong> <code>${url}</code>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('url-test-results').innerHTML = results;
+    };
+
+    // 测试图片加载
+    window.testImageLoading = function() {
+      const testImages = [
+        { name: '浙江底色', path: 'textures/zhejiang/baseColor.png' },
+        { name: '浙江法线', path: 'textures/zhejiang/normal.jpg' },
+        { name: '杭州纹理', path: 'images/city/hangzhou.jpg' },
+        { name: '宁波纹理', path: 'images/city/ningbo.jpg' }
+      ];
+
+      const resultsDiv = document.getElementById('image-test-results');
+      const previewDiv = document.getElementById('image-preview');
+
+      resultsDiv.innerHTML = '<div class="test-result info">⏳ 正在测试图片加载...</div>';
+      previewDiv.innerHTML = '';
+
+      let successCount = 0;
+      let errorCount = 0;
+      const totalCount = testImages.length;
+
+      testImages.forEach(({ name, path }) => {
+        const url = getAssetUrl(path);
+        const img = new Image();
+
+        const card = document.createElement('div');
+        card.className = 'image-card';
+        card.innerHTML = `
+          <img src="${url}" alt="${name}">
+          <div class="status">⏳ 加载中...</div>
+          <div style="font-size: 11px; color: #666; margin-top: 5px; word-break: break-all;">${path}</div>
+        `;
+        previewDiv.appendChild(card);
+
+        img.onload = function() {
+          successCount++;
+          card.querySelector('.status').innerHTML = '✅ 加载成功';
+          card.querySelector('.status').style.color = '#155724';
+          updateReport();
+        };
+
+        img.onerror = function() {
+          errorCount++;
+          card.querySelector('.status').innerHTML = '❌ 加载失败';
+          card.querySelector('.status').style.color = '#721c24';
+          card.querySelector('img').style.display = 'none';
+          updateReport();
+        };
+
+        img.src = url;
+      });
+
+      function updateReport() {
+        if (successCount + errorCount === totalCount) {
+          const resultClass = errorCount === 0 ? 'success' : 'error';
+          resultsDiv.innerHTML = `
+            <div class="test-result ${resultClass}">
+              <strong>测试完成</strong><br>
+              ✅ 成功: ${successCount} / ${totalCount}<br>
+              ❌ 失败: ${errorCount} / ${totalCount}
+            </div>
+          `;
+
+          // 更新总报告
+          const reportDiv = document.getElementById('test-report');
+          if (errorCount === 0) {
+            reportDiv.innerHTML = `
+              <div class="test-result success">
+                <h3>🎉 所有测试通过！</h3>
+                <p>资源路径配置正确，所有图片都能正常加载。</p>
+              </div>
+            `;
+          } else {
+            reportDiv.innerHTML = `
+              <div class="test-result error">
+                <h3>⚠️ 部分测试失败</h3>
+                <p>有 ${errorCount} 个资源无法加载。请检查：</p>
+                <ul>
+                  <li>资源文件是否存在于 <code>dist/assets/</code> 目录</li>
+                  <li>资源路径配置是否正确</li>
+                  <li>服务器是否正确配置了静态资源访问</li>
+                  <li>是否存在 CORS 问题</li>
+                </ul>
+                <p>查看浏览器 Console 和 Network 标签获取更多信息。</p>
+              </div>
+            `;
+          }
+        }
+      }
+    };
+
+    // 页面加载时显示环境信息
+    showEnvInfo();
+  </script>
+</body>
+</html>
