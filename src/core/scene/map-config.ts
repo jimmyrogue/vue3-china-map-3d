@@ -39,8 +39,8 @@ export const MAP_LAYER_CONFIG = {
 export const CITY_MARKER_SCALE = 0.17
 
 export const MAP_TEXTURE_SRC = {
-  baseColor: getAssetUrl('zhejiang/baseColor.png'),
-  normal: getAssetUrl('zhejiang/normal.jpg'),
+  baseColor: getAssetUrl('textures/zhejiang/baseColor.png'),
+  normal: getAssetUrl('textures/zhejiang/normal.jpg'),
   detail: '',
   emissive: '',
   roughness: '',
