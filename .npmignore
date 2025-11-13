@@ -1,0 +1,11 @@
+src
+examples
+node_modules
+*.log
+.DS_Store
+.vscode
+.idea
+*.local
+vite.config.ts
+tsconfig.json
+tsconfig.node.json

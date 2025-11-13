@@ -1,0 +1,63 @@
+.zj-city-marker {
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 0.5px solid #FFF;
+  background: linear-gradient(
+    98deg,
+    rgba(0, 97, 188, 0.6) 0%,
+    rgba(39, 111, 255, 0.6) 100%
+  );
+  box-shadow:
+    0 -2px 4px 0 rgba(57, 137, 250, 0.56) inset,
+    0 2px 4px 0 rgba(59, 172, 244, 0.72) inset;
+  padding: 8px 12px;
+}
+
+.zj-city-marker__panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zj-city-marker__name {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.08;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(18, 124, 255, 0.45);
+}
+
+.zj-city-marker__name-zh {
+  color: #FFF;
+  text-shadow: 0 2px 4px rgba(11, 72, 129, 0.72);
+  font-family: YouSheBiaoTiHei;
+  font-size: max(40px, 3em);
+  font-style: normal;
+  font-weight: 400;
+}
+
+.map-canvas[data-map-level='city'] .zj-city-marker__name-zh,
+.map-canvas[data-map-level='district'] .zj-city-marker__name-zh {
+  font-size: 40px;
+}
+
+.map-canvas[data-map-level='district'] .zj-city-marker__name-zh {
+  font-size: 50px;
+}
+
+.zj-city-marker--top {
+  /* border-color: rgba(255, 224, 150, 0.86);
+  box-shadow:
+    0 -2px 4px 0 rgba(57, 137, 250, 0.56) inset,
+    0 2px 4px 0 rgba(59, 172, 244, 0.72) inset,
+    0 0 12px rgba(255, 209, 103, 0.45); */
+}
+
+.zj-city-marker--district {
+  --marker-strength: 0.72;
+}
+
+.zj-city-marker--district .zj-city-marker__panel {
+  min-width: 132px;
+  /* padding: 7px 14px; */
+}

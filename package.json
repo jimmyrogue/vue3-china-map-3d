@@ -1,0 +1,63 @@
+{
+  "name": "vue3-china-map-3d",
+  "version": "1.0.0",
+  "private": false,
+  "description": "Vue 3 + Three.js 中国省份3D地图组件",
+  "type": "module",
+  "main": "./dist/vue3-china-map-3d.umd.js",
+  "module": "./dist/vue3-china-map-3d.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/vue3-china-map-3d.es.js",
+      "require": "./dist/vue3-china-map-3d.umd.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && vue-tsc --declaration --emitDeclarationOnly --outDir dist || true",
+    "build:lib": "vite build",
+    "preview": "vite preview"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0"
+  },
+  "dependencies": {
+    "three": "^0.171.0",
+    "d3-geo": "^3.1.1",
+    "gsap": "^3.13.0",
+    "lodash-es": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/three": "^0.180.0",
+    "@types/d3-geo": "^3.1.0",
+    "@types/lodash-es": "^4.17.12",
+    "@vitejs/plugin-vue": "^5.0.5",
+    "typescript": "^5.8.3",
+    "vite": "^5.3.2",
+    "vue": "^3.4.31",
+    "vue-tsc": "^2.0.0"
+  },
+  "keywords": [
+    "vue3",
+    "threejs",
+    "3d-map",
+    "china-map",
+    "zhejiang-map",
+    "geojson",
+    "visualization",
+    "data-visualization"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}
