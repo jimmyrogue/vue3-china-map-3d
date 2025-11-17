@@ -125,7 +125,8 @@ export class ZhejiangMapScene {
   private cityDistrictData: Map<string, CityDistrictDatum[]> = new Map()
   private currentCityGeo: FeatureCollection | null = null
   private currentCityTransformer: GeoToSceneTransformerResult | null = null
-  private currentDistrictTransformer: GeoToSceneTransformerResult | null = null
+  // @ts-ignore - 保留用于未来功能
+  private _currentDistrictTransformer: GeoToSceneTransformerResult | null = null
   private provinceGeometryGroup: THREE.Group | null = null
   private provinceCityMeshesCache: THREE.Mesh[] = []
   private provinceCityMeshGroupsCache: Map<string, THREE.Mesh[]> = new Map()
@@ -524,7 +525,7 @@ export class ZhejiangMapScene {
     this.currentDistrictName = null
     this.currentCityGeo = null
     this.currentCityTransformer = null
-    this.currentDistrictTransformer = null
+    this._currentDistrictTransformer = null
     this.refreshCityMarkers()
     this.reportLevelChange('province', null, null)
 
@@ -770,7 +771,7 @@ export class ZhejiangMapScene {
 
       this.currentCityGeo = geo
       this.currentCityTransformer = geometryTransform ?? null
-      this.currentDistrictTransformer = null
+      this._currentDistrictTransformer = null
 
       if (this.cityMeshes.length) {
         this.cityMeshes.forEach((mesh) => {
@@ -859,7 +860,7 @@ export class ZhejiangMapScene {
 
       this.setActiveGeometryState(districtMeshes, districtMeshGroups)
 
-      this.currentDistrictTransformer = geometryTransform ?? null
+      this._currentDistrictTransformer = geometryTransform ?? null
 
       if (geometryTransform)
         this.buildFocusedDistrictLabel(districtGeo, geometryTransform, cityName, districtName)
