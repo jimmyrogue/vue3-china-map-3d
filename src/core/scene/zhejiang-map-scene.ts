@@ -936,7 +936,9 @@ export class ZhejiangMapScene {
         __labelName: districtName,
       }
 
-      this.mapGroup.add(sprite)
+      if (this.mapGroup) {
+        this.mapGroup.add(sprite)
+      }
       this.districtLabelSprites.push(sprite)
       this.districtLabelSpritesByName.set(districtName, sprite)
     })
@@ -1291,7 +1293,7 @@ export class ZhejiangMapScene {
 
     if (this.renderer?.domElement) {
       const isInteractiveLevel = this.currentLevel === 'province' || this.currentLevel === 'city'
-      const shouldShowPointer = isInteractiveLevel && userData.isClickable !== false
+      const shouldShowPointer = isInteractiveLevel && (userData.isClickable === true || userData.isClickable === undefined)
       this.renderer.domElement.style.cursor = shouldShowPointer ? 'pointer' : 'default'
     }
 

@@ -52,6 +52,7 @@ export function getAssetUrl(path: string): string {
   }
 
   // 开发模式：使用 Vite 的 new URL 处理
+  // @ts-ignore - Vite 会在运行时注入 import.meta.env
   if (import.meta.env?.DEV) {
     finalUrl = new URL(`../../../assets/${path}`, import.meta.url).href
     if (debugMode) {

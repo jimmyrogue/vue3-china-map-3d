@@ -4,17 +4,17 @@ import { getAssetUrl } from '../config/asset-config'
 type GeoLoader = () => Promise<{ default: FeatureCollection }>
 
 const cityGeoLoaders: Record<string, GeoLoader> = {
-  杭州市: () => import('../../assets/geo/hangzhoudistrict.json'),
-  宁波市: () => import('../../assets/geo/ningbodistrict.json'),
-  温州市: () => import('../../assets/geo/wenzhoudistrict.json'),
-  绍兴市: () => import('../../assets/geo/shaoxingdistrict.json'),
-  湖州市: () => import('../../assets/geo/huzhoudistrict.json'),
-  嘉兴市: () => import('../../assets/geo/jiaxingdistrict.json'),
-  金华市: () => import('../../assets/geo/jinhuadistrict.json'),
-  衢州市: () => import('../../assets/geo/quzhoudistrict.json'),
-  舟山市: () => import('../../assets/geo/zhoushandistrict.json'),
-  台州市: () => import('../../assets/geo/taizhoudistrict.json'),
-  丽水市: () => import('../../assets/geo/lishuidistrict.json'),
+  杭州市: () => import('../../assets/geo/hangzhoudistrict.json') as Promise<{ default: FeatureCollection }>,
+  宁波市: () => import('../../assets/geo/ningbodistrict.json') as Promise<{ default: FeatureCollection }>,
+  温州市: () => import('../../assets/geo/wenzhoudistrict.json') as Promise<{ default: FeatureCollection }>,
+  绍兴市: () => import('../../assets/geo/shaoxingdistrict.json') as Promise<{ default: FeatureCollection }>,
+  湖州市: () => import('../../assets/geo/huzhoudistrict.json') as Promise<{ default: FeatureCollection }>,
+  嘉兴市: () => import('../../assets/geo/jiaxingdistrict.json') as Promise<{ default: FeatureCollection }>,
+  金华市: () => import('../../assets/geo/jinhuadistrict.json') as Promise<{ default: FeatureCollection }>,
+  衢州市: () => import('../../assets/geo/quzhoudistrict.json') as Promise<{ default: FeatureCollection }>,
+  舟山市: () => import('../../assets/geo/zhoushandistrict.json') as Promise<{ default: FeatureCollection }>,
+  台州市: () => import('../../assets/geo/taizhoudistrict.json') as Promise<{ default: FeatureCollection }>,
+  丽水市: () => import('../../assets/geo/lishuidistrict.json') as Promise<{ default: FeatureCollection }>,
 }
 
 const cityTextureMap: Record<string, string> = {
