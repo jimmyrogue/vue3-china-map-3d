@@ -20,10 +20,10 @@ export function setDebugMode(enabled: boolean): void {
 
 /**
  * 设置自定义的资源基础路径
- * @param basePath 资源基础路径，例如 '/node_modules/vue3-china-map-3d/dist/assets'
+ * @param basePath 资源基础路径，例如 '/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets'
  * @example
  * ```ts
- * import { setAssetsBasePath } from 'vue3-china-map-3d'
+ * import { setAssetsBasePath } from '@jimmyrogue/vue3-china-map-3d'
  * setAssetsBasePath('/static/vue3-china-map-3d/assets')
  * ```
  */
@@ -66,11 +66,11 @@ export function getAssetUrl(path: string): string {
   // 检测是否是 Vite 的依赖预构建路径（包含 .vite/deps/）
   if (currentUrl.includes('/.vite/deps/')) {
     // Vite 依赖预构建模式：使用固定的包路径
-    // 从 http://host:port/node_modules/.vite/deps/vue3-china-map-3d.js
-    // 转换为 http://host:port/node_modules/vue3-china-map-3d/dist/assets/
+    // 从 http://host:port/node_modules/.vite/deps/@jimmyrogue_vue3-china-map-3d.js
+    // 转换为 http://host:port/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets/
     const urlObj = new URL(currentUrl)
     const origin = urlObj.origin
-    finalUrl = `${origin}/node_modules/vue3-china-map-3d/dist/assets/${path}`
+    finalUrl = `${origin}/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets/${path}`
 
     if (debugMode) {
       console.log(`[Vue3ChinaMap3D] Vite 依赖预构建模式:`)
@@ -83,7 +83,7 @@ export function getAssetUrl(path: string): string {
   } else {
     // 正常生产模式：相对于当前模块路径
     // import.meta.url 在运行时会是类似：
-    // "http://localhost:3000/node_modules/vue3-china-map-3d/dist/vue3-china-map-3d.es.js"
+    // "http://localhost:3000/node_modules/@jimmyrogue/vue3-china-map-3d/dist/vue3-china-map-3d.es.js"
     const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'))
     finalUrl = `${baseUrl}/assets/${path}`
 

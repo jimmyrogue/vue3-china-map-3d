@@ -12,7 +12,7 @@
 
 ```typescript
 import { createApp } from 'vue'
-import { setDebugMode } from 'vue3-china-map-3d'
+import { setDebugMode } from '@jimmyrogue/vue3-china-map-3d'
 import App from './App.vue'
 
 // 🔥 启用调试模式
@@ -34,18 +34,18 @@ createApp(App).mount('#app')
 
 ```
 [Vue3ChinaMap3D] 调试模式已启用
-[Vue3ChinaMap3D] import.meta.url = http://localhost:3000/node_modules/vue3-china-map-3d/dist/vue3-china-map-3d.es.js
+[Vue3ChinaMap3D] import.meta.url = http://localhost:3000/node_modules/@jimmyrogue/vue3-china-map-3d/dist/@jimmyrogue/vue3-china-map-3d.es.js
 [Vue3ChinaMap3D] 生产模式:
-  - 当前模块 URL: http://localhost:3000/node_modules/vue3-china-map-3d/dist/vue3-china-map-3d.es.js
-  - 基础 URL: http://localhost:3000/node_modules/vue3-china-map-3d/dist
+  - 当前模块 URL: http://localhost:3000/node_modules/@jimmyrogue/vue3-china-map-3d/dist/@jimmyrogue/vue3-china-map-3d.es.js
+  - 基础 URL: http://localhost:3000/node_modules/@jimmyrogue/vue3-china-map-3d/dist
   - 资源路径: textures/zhejiang/baseColor.png
-  - 最终 URL: http://localhost:3000/node_modules/vue3-china-map-3d/dist/assets/textures/zhejiang/baseColor.png
+  - 最终 URL: http://localhost:3000/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets/textures/zhejiang/baseColor.png
 ```
 
 ### ✅ 检查要点
 
 1. **`import.meta.url` 是否正确？**
-   - 应该指向你的 `vue3-china-map-3d.es.js` 文件
+   - 应该指向你的 `@jimmyrogue/vue3-china-map-3d.es.js` 文件
    - 如果是 `blob:` 或 `data:` 开头，说明有问题
 
 2. **最终 URL 是否可访问？**
@@ -76,16 +76,16 @@ createApp(App).mount('#app')
 **解决方案**：
 
 ```typescript
-import { setAssetsBasePath } from 'vue3-china-map-3d'
+import { setAssetsBasePath } from '@jimmyrogue/vue3-china-map-3d'
 
 // 方案 A：使用绝对路径
-setAssetsBasePath('http://localhost:3000/node_modules/vue3-china-map-3d/dist/assets')
+setAssetsBasePath('http://localhost:3000/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets')
 
 // 方案 B：使用相对于根目录的路径
-setAssetsBasePath('/node_modules/vue3-china-map-3d/dist/assets')
+setAssetsBasePath('/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets')
 
 // 方案 C：如果资源在 CDN 上
-setAssetsBasePath('https://cdn.example.com/vue3-china-map-3d/assets')
+setAssetsBasePath('https://cdn.example.com/@jimmyrogue/vue3-china-map-3d/assets')
 ```
 
 #### ❌ 错误 2：CORS 错误
@@ -108,10 +108,10 @@ setAssetsBasePath('https://cdn.example.com/vue3-china-map-3d/assets')
 **解决方案**：
 
 ```typescript
-import { setAssetsBasePath } from 'vue3-china-map-3d'
+import { setAssetsBasePath } from '@jimmyrogue/vue3-china-map-3d'
 
 // 手动指定资源路径
-setAssetsBasePath('/static/vue3-china-map-3d/assets')
+setAssetsBasePath('/static/@jimmyrogue/vue3-china-map-3d/assets')
 ```
 
 ---
@@ -124,7 +124,7 @@ setAssetsBasePath('/static/vue3-china-map-3d/assets')
 
 ```bash
 # 检查 node_modules 中的资源
-ls -la node_modules/vue3-china-map-3d/dist/assets/
+ls -la node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets/
 
 # 应该看到以下目录结构：
 # assets/
@@ -151,10 +151,10 @@ ls -la node_modules/vue3-china-map-3d/dist/assets/
 ```
 your-domain.com/
 ├── node_modules/
-│   └── vue3-china-map-3d/
+│   └── @jimmyrogue/vue3-china-map-3d/
 │       └── dist/
-│           ├── vue3-china-map-3d.es.js
-│           ├── vue3-china-map-3d.umd.js
+│           ├── @jimmyrogue/vue3-china-map-3d.es.js
+│           ├── @jimmyrogue/vue3-china-map-3d.umd.js
 │           ├── style.css
 │           └── assets/  ← 必须存在！
 │               ├── geo/
@@ -171,7 +171,7 @@ your-domain.com/
 
 ```javascript
 // 测试图片加载
-const testUrl = 'http://localhost:3000/node_modules/vue3-china-map-3d/dist/assets/textures/zhejiang/baseColor.png'
+const testUrl = 'http://localhost:3000/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets/textures/zhejiang/baseColor.png'
 
 const img = new Image()
 img.onload = () => console.log('✅ 图片加载成功！', img.width, 'x', img.height)
@@ -199,15 +199,15 @@ fetch(testUrl)
 ```typescript
 // main.ts
 import { createApp } from 'vue'
-import { setDebugMode, setAssetsBasePath } from 'vue3-china-map-3d'
-import 'vue3-china-map-3d/style.css'
+import { setDebugMode, setAssetsBasePath } from '@jimmyrogue/vue3-china-map-3d'
+import '@jimmyrogue/vue3-china-map-3d/style.css'
 import App from './App.vue'
 
 // 1. 启用调试模式
 setDebugMode(true)
 
 // 2. 如果自动检测失败，手动设置资源路径
-// setAssetsBasePath('/node_modules/vue3-china-map-3d/dist/assets')
+// setAssetsBasePath('/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets')
 
 // 3. 创建应用
 const app = createApp(App)
@@ -256,8 +256,8 @@ server {
   }
 
   # 或者将资源复制到 static 目录
-  location /static/vue3-china-map-3d/ {
-    alias /var/www/html/static/vue3-china-map-3d/;
+  location /static/@jimmyrogue/vue3-china-map-3d/ {
+    alias /var/www/html/static/@jimmyrogue/vue3-china-map-3d/;
     expires 1y;
     add_header Cache-Control "public, immutable";
   }
@@ -267,16 +267,16 @@ server {
 然后在代码中配置：
 
 ```typescript
-setAssetsBasePath('/static/vue3-china-map-3d/assets')
+setAssetsBasePath('/static/@jimmyrogue/vue3-china-map-3d/assets')
 ```
 
 ### 场景 4：CDN 部署
 
 ```typescript
 // 将资源上传到 CDN
-// https://cdn.example.com/vue3-china-map-3d/assets/...
+// https://cdn.example.com/@jimmyrogue/vue3-china-map-3d/assets/...
 
-setAssetsBasePath('https://cdn.example.com/vue3-china-map-3d/assets')
+setAssetsBasePath('https://cdn.example.com/@jimmyrogue/vue3-china-map-3d/assets')
 ```
 
 ---
@@ -314,7 +314,7 @@ THREE.TextureLoader.prototype.load = function(url, onLoad, onProgress, onError) 
 ### 2. 检查所有资源 URL
 
 ```typescript
-import { setDebugMode } from 'vue3-china-map-3d'
+import { setDebugMode } from '@jimmyrogue/vue3-china-map-3d'
 
 // 启用调试模式
 setDebugMode(true)
