@@ -138,6 +138,7 @@ export class ZhejiangMapScene {
   private districtLabelSpritesByName: Map<string, CSS3DSprite> = new Map()
   private customLabelSprites: CSS3DSprite[] = []
   private customLabelSpritesById: Map<string, CSS3DSprite> = new Map()
+  private customLabelConfigs: CustomLabelConfig[] | undefined
   private loadedTextures: THREE.Texture[] = []
   private cityDisplayData: CityRiskDatum[] = DEFAULT_CITY_DISPLAY_DATA
   private cityDistrictData: Map<string, CityDistrictDatum[]> = new Map()
@@ -208,6 +209,9 @@ export class ZhejiangMapScene {
   }
 
   constructor(private readonly options: ZhejiangMapSceneOptions) {
+    console.log('[ZhejiangMapScene] Constructor - hideDistrictLabel:', this.options.hideDistrictLabel)
+    console.log('[ZhejiangMapScene] Constructor - hideCityLabel:', this.options.hideCityLabel)
+    this.customLabelConfigs = options.customLabels
     this.setupLoadingManager()
   }
 
@@ -454,7 +458,7 @@ export class ZhejiangMapScene {
     this.rootGroup.add(this.mapGroup)
     this.scene.add(this.rootGroup)
 
-    this.buildCustomLabels(this.options.customLabels)
+    this.buildCustomLabels()
   }
 
   private readonly tryLoadTexture = (url: string): THREE.Texture | null => {
@@ -548,7 +552,10 @@ export class ZhejiangMapScene {
     this._currentDistrictTransformer = null
     this.refreshCityMarkers()
     this.reportLevelChange('province', null, null)
-    this.updateCustomLabelsVisibility()
+
+    // 重新构建 customLabels 以使用正确的 transformer
+    if (this.customLabelConfigs?.length)
+      this.buildCustomLabels()
 
     if (options.animateCamera)
       this.animateToProvinceView()
@@ -650,20 +657,55 @@ export class ZhejiangMapScene {
   }
 
   private buildCustomLabels(labels?: CustomLabelConfig[]): void {
-    if (!labels || !labels.length) {
+    if (labels !== undefined)
+      this.customLabelConfigs = labels
+
+    const effectiveLabels = labels ?? this.customLabelConfigs
+
+    if (!effectiveLabels || !effectiveLabels.length) {
       console.log('[CustomLabels] No custom labels to build')
       return
     }
 
-    console.log(`[CustomLabels] Building ${labels.length} custom labels`)
+    console.log(`[CustomLabels] Building ${effectiveLabels.length} custom labels at level: ${this.currentLevel}`)
     this.clearCustomLabels()
 
-    const projection = createMapProjection()
+    // 根据当前层级选择正确的 transformer
+    let transformer: GeoToSceneTransformerResult | null = null
+    if (this.currentLevel === 'district' && this._currentDistrictTransformer) {
+      transformer = this._currentDistrictTransformer
+      console.log('[CustomLabels] Using district transformer')
+    }
+    else if (this.currentLevel === 'city' && this.currentCityTransformer) {
+      transformer = this.currentCityTransformer
+      console.log('[CustomLabels] Using city transformer')
+    }
+    else {
+      console.log('[CustomLabels] Using province projection')
+    }
 
-    labels.forEach((config) => {
+    const provinceProjection = transformer ? null : createMapProjection()
+
+    effectiveLabels.forEach((config) => {
       console.log(`[CustomLabels] Creating label: ${config.id} at position [${config.position[0]}, ${config.position[1]}]`)
 
-      const [x, y] = projection(config.position) || [0, 0]
+      // 根据是否有 transformer 使用不同的位置计算方式
+      let x: number, z: number
+      if (transformer) {
+        // transformer.project() 返回的 Y 值需要取反
+        const [projX, projY] = transformer.project(config.position)
+        x = projX
+        z = -projY
+        console.log(`[CustomLabels] Transformed position for ${config.id}: [${x}, ${-projY}] (projY: ${projY})`)
+      }
+      else {
+        // 省级投影返回的 Y 值已经是负数，直接使用
+        const [projX, projY] = provinceProjection!(config.position) || [0, 0]
+        x = projX
+        z = projY
+        console.log(`[CustomLabels] Province position for ${config.id}: [${x}, ${projY}]`)
+      }
+
       const element = config.renderer()
 
       if (!element) {
@@ -676,7 +718,7 @@ export class ZhejiangMapScene {
 
       const sprite = new CSS3DSprite(element)
       const defaultHeight = MAP_LAYER_CONFIG.extrusionDepth + 1.2
-      sprite.position.set(x, config.height ?? defaultHeight, y)
+      sprite.position.set(x, config.height ?? defaultHeight, z)
       sprite.scale.setScalar(config.scale ?? 0.24)
 
       // 先设置 userData，确保动画能正确使用
@@ -694,21 +736,21 @@ export class ZhejiangMapScene {
         sprite.userData.__clickHandler = handler
       }
 
-      // 添加默认的悬停动画
-      const hoverHandler = () => {
-        console.log(`[CustomLabels] Label hover: ${config.id}`)
-        this.animateCustomLabelHover(sprite, true)
-        config.onHover?.(true, config)
+      // 添加悬停回调（不包含上浮动画，避免与区域悬浮重复）
+      if (config.onHover) {
+        const hoverHandler = () => {
+          console.log(`[CustomLabels] Label hover: ${config.id}`)
+          config.onHover!(true, config)
+        }
+        const leaveHandler = () => {
+          console.log(`[CustomLabels] Label leave: ${config.id}`)
+          config.onHover!(false, config)
+        }
+        element.addEventListener('mouseenter', hoverHandler)
+        element.addEventListener('mouseleave', leaveHandler)
+        sprite.userData.__hoverHandler = hoverHandler
+        sprite.userData.__leaveHandler = leaveHandler
       }
-      const leaveHandler = () => {
-        console.log(`[CustomLabels] Label leave: ${config.id}`)
-        this.animateCustomLabelHover(sprite, false)
-        config.onHover?.(false, config)
-      }
-      element.addEventListener('mouseenter', hoverHandler)
-      element.addEventListener('mouseleave', leaveHandler)
-      sprite.userData.__hoverHandler = hoverHandler
-      sprite.userData.__leaveHandler = leaveHandler
       this.mapGroup?.add(sprite)
       this.customLabelSprites.push(sprite)
       this.customLabelSpritesById.set(config.id, sprite)
@@ -718,7 +760,7 @@ export class ZhejiangMapScene {
 
     this.labelNeedsUpdate = true
     this.updateCustomLabelsVisibility()
-    console.log(`[CustomLabels] All ${labels.length} labels built successfully`)
+    console.log(`[CustomLabels] All ${effectiveLabels.length} labels built successfully`)
   }
 
   private clearCustomLabels(): void {
@@ -919,7 +961,15 @@ export class ZhejiangMapScene {
       this.currentCityName = cityName
       this.currentDistrictName = null
       this.reportLevelChange('city', cityName, null)
-      this.updateCustomLabelsVisibility()
+
+      // 重新构建 customLabels 以使用正确的 transformer
+      console.log('[focusCity] customLabels:', this.customLabelConfigs, 'length:', this.customLabelConfigs?.length)
+      if (this.customLabelConfigs?.length)
+        this.buildCustomLabels()
+      else {
+        console.log('[focusCity] No customLabels to rebuild')
+      }
+
       this.animateToCityView()
     }
     finally {
@@ -1009,7 +1059,11 @@ export class ZhejiangMapScene {
       this.currentCityName = cityName
       this.currentDistrictName = districtName
       this.reportLevelChange('district', cityName, districtName)
-      this.updateCustomLabelsVisibility()
+
+      // 重新构建 customLabels 以使用正确的 transformer
+      if (this.customLabelConfigs?.length)
+        this.buildCustomLabels()
+
       this.animateToDistrictView(geometryTransform)
     }
     finally {
