@@ -50,6 +50,8 @@ export interface ZhejiangMapSceneOptions {
   cityLabelRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement
   districtLabelRenderer?: (name: string, options: { value?: number, strength?: number }) => HTMLElement | null | false
   customLabels?: CustomLabelConfig[]
+  hideCityLabel?: boolean
+  hideDistrictLabel?: boolean
 }
 
 export interface ZhejiangMapSceneMountOptions {
@@ -569,6 +571,7 @@ export class ZhejiangMapScene {
         this.cityLabelSpritesByName.set(city.name, label)
       },
       cityLabelRenderer: this.options.cityLabelRenderer,
+      hideCityLabel: this.options.hideCityLabel,
     })
 
     // 🚀 性能优化：标签创建后需要渲染
@@ -1019,6 +1022,11 @@ export class ZhejiangMapScene {
     transformer: GeoToSceneTransformerResult,
     cityName: string,
   ): void {
+    if (this.options.hideDistrictLabel) {
+      console.log('[DistrictLabels] hideDistrictLabel is true, skipping')
+      return
+    }
+
     console.log(`[DistrictLabels] Building district labels for city: ${cityName}`)
     console.log(`[DistrictLabels] districtLabelRenderer: ${this.options.districtLabelRenderer ? 'CUSTOM' : 'DEFAULT'}`)
 

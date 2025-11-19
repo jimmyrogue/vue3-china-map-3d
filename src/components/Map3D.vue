@@ -10,6 +10,8 @@ const props = defineProps<{
   cityLabelRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement
   districtLabelRenderer?: (name: string, options: { value?: number, strength?: number }) => HTMLElement
   customLabels?: CustomLabelConfig[]
+  hideCityLabel?: boolean
+  hideDistrictLabel?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -43,6 +45,8 @@ function mountScene(initialData?: CityBoardDatum[] | CityRiskDatum[]) {
     cityLabelRenderer: props.cityLabelRenderer,
     districtLabelRenderer: props.districtLabelRenderer,
     customLabels: props.customLabels,
+    hideCityLabel: props.hideCityLabel,
+    hideDistrictLabel: props.hideDistrictLabel,
   })
   mapScene.mount(mapContainerRef.value, {
     cityData: initialData ?? props.cityData,

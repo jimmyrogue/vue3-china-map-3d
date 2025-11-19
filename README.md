@@ -94,6 +94,8 @@ function handleCityClick(city: any) {
 | `cityLabelRenderer` | `(city, normalized) => HTMLElement \| null \| false` | - | 自定义城市标签渲染函数 |
 | `districtLabelRenderer` | `(name, options) => HTMLElement \| null \| false` | - | 自定义区县标签渲染函数 |
 | `customLabels` | `CustomLabelConfig[]` | - | 完全自定义标签配置数组 |
+| `hideCityLabel` | `boolean` | `false` | 隐藏所有城市标签 |
+| `hideDistrictLabel` | `boolean` | `false` | 隐藏所有区县标签 |
 
 ### Events
 
@@ -117,6 +119,28 @@ interface CityDistrictDatum {
   name: string   // 区县名称
   value?: number // 数值
 }
+```
+
+## 🏷️ 标签控制
+
+### 隐藏标签
+
+如果你想完全隐藏城市或区县标签，可以使用 `hideCityLabel` 和 `hideDistrictLabel` 配置：
+
+```vue
+<template>
+  <!-- 隐藏所有城市标签 -->
+  <Map3D :hide-city-label="true" />
+
+  <!-- 隐藏所有区县标签 -->
+  <Map3D :hide-district-label="true" />
+
+  <!-- 同时隐藏城市和区县标签 -->
+  <Map3D
+    :hide-city-label="true"
+    :hide-district-label="true"
+  />
+</template>
 ```
 
 ## 🎨 自定义标签

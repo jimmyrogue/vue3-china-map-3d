@@ -28,6 +28,7 @@ export interface MarkerLayerContext {
   onCityLabelClick?: (payload: { event: MouseEvent, city: CityRiskDatum }) => void
   onLabelCreated?: (payload: { city: CityRiskDatum, label: CSS3DSprite }) => void
   cityLabelRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement
+  hideCityLabel?: boolean
 }
 
 const LABEL_OFFSET_Y = 13.5
@@ -69,7 +70,7 @@ export function buildCityMarkers(context: MarkerLayerContext): void {
     const markerBase = createMarkerBase(normalized, waveMeshArr)
     cityGroup.add(markerBase)
 
-    const label = createCityLabelSprite(city, normalized, context.cityLabelRenderer)
+    const label = context.hideCityLabel ? null : createCityLabelSprite(city, normalized, context.cityLabelRenderer)
     if (label) {
       label.position.set(0, LABEL_OFFSET_Y, 0)
       label.scale.setScalar(LABEL_SCALE)
