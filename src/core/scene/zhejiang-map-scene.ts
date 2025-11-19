@@ -677,11 +677,11 @@ export class ZhejiangMapScene {
       }
 
       if (config.onHover) {
-        const hoverHandler = (e: MouseEvent) => {
+        const hoverHandler = () => {
           console.log(`[CustomLabels] Label hover: ${config.id}`)
           config.onHover!(true, config)
         }
-        const leaveHandler = (e: MouseEvent) => {
+        const leaveHandler = () => {
           console.log(`[CustomLabels] Label leave: ${config.id}`)
           config.onHover!(false, config)
         }
