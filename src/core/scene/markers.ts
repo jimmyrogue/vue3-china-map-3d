@@ -46,6 +46,11 @@ const sharedGeometries = {
 export function buildCityMarkers(context: MarkerLayerContext): void {
   const { mapGroup, waveMeshArr, cityMarkerGroups, cityMarkerGroupsOptimized, cityData } = context
 
+  if (context.hideCityLabel) {
+    console.log('[CityMarkers] hideCityLabel is true, skipping all city markers')
+    return
+  }
+
   console.log(`[CityMarkers] Building city markers, cityLabelRenderer: ${context.cityLabelRenderer ? 'CUSTOM' : 'DEFAULT'}`)
   console.log(`[CityMarkers] City data count: ${cityData.length}`)
 
@@ -70,7 +75,7 @@ export function buildCityMarkers(context: MarkerLayerContext): void {
     const markerBase = createMarkerBase(normalized, waveMeshArr)
     cityGroup.add(markerBase)
 
-    const label = context.hideCityLabel ? null : createCityLabelSprite(city, normalized, context.cityLabelRenderer)
+    const label = createCityLabelSprite(city, normalized, context.cityLabelRenderer)
     if (label) {
       label.position.set(0, LABEL_OFFSET_Y, 0)
       label.scale.setScalar(LABEL_SCALE)

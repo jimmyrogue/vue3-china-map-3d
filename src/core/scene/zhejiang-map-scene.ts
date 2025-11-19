@@ -1157,6 +1157,11 @@ export class ZhejiangMapScene {
     cityName: string,
     districtName: string,
   ): void {
+    if (this.options.hideDistrictLabel) {
+      console.log('[FocusedDistrictLabel] hideDistrictLabel is true, skipping')
+      return
+    }
+
     if (!this.mapGroup)
       return
 
@@ -1581,7 +1586,13 @@ export class ZhejiangMapScene {
 
     this.customLabelSprites.forEach((sprite) => {
       const userData = sprite.userData as { __regionName?: string }
-      if (userData.__regionName === regionName)
+      const labelRegionName = userData.__regionName
+
+      if (!labelRegionName)
+        return
+
+      const parts = labelRegionName.split(',').map(p => p.trim())
+      if (parts.includes(regionName))
         this.animateCustomLabelHover(sprite, isHovering)
     })
   }
