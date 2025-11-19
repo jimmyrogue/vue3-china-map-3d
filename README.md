@@ -91,6 +91,8 @@ function handleCityClick(city: any) {
 | 属性 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `cityData` | `CityBoardDatum[]` | `[]` | 城市数据数组 |
+| `cityLabelRenderer` | `(city, normalized) => HTMLElement` | - | 自定义城市标签渲染函数 |
+| `districtLabelRenderer` | `(name, options) => HTMLElement` | - | 自定义区县标签渲染函数 |
 
 ### Events
 
@@ -115,6 +117,63 @@ interface CityDistrictDatum {
   value?: number // 数值
 }
 ```
+
+## 🎨 自定义标签
+
+### 自定义城市标签
+
+```vue
+<template>
+  <Map3D :city-label-renderer="customCityLabel" />
+</template>
+
+<script setup lang="ts">
+import { Map3D } from 'vue3-china-map-3d'
+import type { CityRiskDatum } from 'vue3-china-map-3d'
+
+function customCityLabel(city: CityRiskDatum, normalized: number): HTMLElement {
+  const div = document.createElement('div')
+  div.className = 'my-city-label'
+  div.innerHTML = `<strong>${city.name}</strong>: ${city.value}`
+  div.style.pointerEvents = 'auto'
+  div.style.cursor = 'pointer'
+  return div
+}
+</script>
+```
+
+### 自定义区县标签
+
+```vue
+<template>
+  <Map3D :district-label-renderer="customDistrictLabel" />
+</template>
+
+<script setup lang="ts">
+import { Map3D } from 'vue3-china-map-3d'
+
+function customDistrictLabel(
+  name: string,
+  options: { value?: number, strength?: number }
+): HTMLElement {
+  const div = document.createElement('div')
+  div.className = 'my-district-label'
+  div.innerHTML = `${name} ${options.value || ''}`
+  div.style.pointerEvents = 'auto'
+  div.style.cursor = 'pointer'
+  return div
+}
+</script>
+```
+
+**参数说明**:
+- `cityLabelRenderer(city, normalized)`:
+  - `city`: 城市数据对象
+  - `normalized`: 归一化值 (0-1)，用于表示数据强度
+- `districtLabelRenderer(name, options)`:
+  - `name`: 区县名称
+  - `options.value`: 区县数值
+  - `options.strength`: 强度值 (0-1)
 
 ## 🎮 交互说明
 

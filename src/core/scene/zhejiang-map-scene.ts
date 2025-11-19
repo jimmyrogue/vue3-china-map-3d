@@ -36,6 +36,8 @@ export interface ZhejiangMapSceneOptions {
     districtName: string
     districtData: CityDistrictDatum | null
   }) => void
+  cityLabelRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement
+  districtLabelRenderer?: (name: string, options: { value?: number, strength?: number }) => HTMLElement
 }
 
 export interface ZhejiangMapSceneMountOptions {
@@ -549,6 +551,7 @@ export class ZhejiangMapScene {
       onLabelCreated: ({ city, label }) => {
         this.cityLabelSpritesByName.set(city.name, label)
       },
+      cityLabelRenderer: this.options.cityLabelRenderer,
     })
 
     // 🚀 性能优化：标签创建后需要渲染
@@ -952,29 +955,36 @@ export class ZhejiangMapScene {
     name: string,
     options: { value?: number, strength?: number } = {},
   ): CSS3DSprite {
-    const marker = document.createElement('div')
-    marker.className = 'zj-city-marker zj-city-marker--district'
-    marker.dataset.district = name
-    marker.style.pointerEvents = 'auto'
-    marker.style.cursor = 'pointer'
+    let marker: HTMLElement
 
-    const normalized = typeof options.strength === 'number'
-      ? THREE.MathUtils.clamp(options.strength, 0, 1)
-      : 0.65
-    marker.style.setProperty('--marker-strength', (0.6 + normalized * 0.4).toFixed(2))
+    if (this.options.districtLabelRenderer) {
+      marker = this.options.districtLabelRenderer(name, options)
+    }
+    else {
+      marker = document.createElement('div')
+      marker.className = 'zj-city-marker zj-city-marker--district'
+      marker.dataset.district = name
+      marker.style.pointerEvents = 'auto'
+      marker.style.cursor = 'pointer'
 
-    const valueRaw = typeof options.value === 'number'
-      ? options.value.toFixed(0)
-      : '--'
-    const valueText = valueRaw === '--' ? '' : valueRaw
+      const normalized = typeof options.strength === 'number'
+        ? THREE.MathUtils.clamp(options.strength, 0, 1)
+        : 0.65
+      marker.style.setProperty('--marker-strength', (0.6 + normalized * 0.4).toFixed(2))
 
-    marker.innerHTML = `
-      <div class="zj-city-marker__panel">
-        <div class="zj-city-marker__name">
-          <span class="zj-city-marker__name-zh">${name}${valueText}</span>
+      const valueRaw = typeof options.value === 'number'
+        ? options.value.toFixed(0)
+        : '--'
+      const valueText = valueRaw === '--' ? '' : valueRaw
+
+      marker.innerHTML = `
+        <div class="zj-city-marker__panel">
+          <div class="zj-city-marker__name">
+            <span class="zj-city-marker__name-zh">${name}${valueText}</span>
+          </div>
         </div>
-      </div>
-    `
+      `
+    }
 
     return new CSS3DSprite(marker)
   }

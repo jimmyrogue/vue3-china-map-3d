@@ -6,6 +6,8 @@ import { ZhejiangMapScene } from '../core/scene/zhejiang-map-scene'
 
 const props = defineProps<{
   cityData?: CityBoardDatum[] | CityRiskDatum[]
+  cityLabelRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement
+  districtLabelRenderer?: (name: string, options: { value?: number, strength?: number }) => HTMLElement
 }>()
 
 const emit = defineEmits<{
@@ -36,6 +38,8 @@ function mountScene(initialData?: CityBoardDatum[] | CityRiskDatum[]) {
     },
     onCityLabelClick: payload => emit('cityLabelClick', payload),
     onDistrictLabelClick: payload => emit('districtLabelClick', payload),
+    cityLabelRenderer: props.cityLabelRenderer,
+    districtLabelRenderer: props.districtLabelRenderer,
   })
   mapScene.mount(mapContainerRef.value, {
     cityData: initialData ?? props.cityData,

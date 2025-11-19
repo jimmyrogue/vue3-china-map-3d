@@ -27,6 +27,7 @@ export interface MarkerLayerContext {
   cityData: CityRiskDatum[]
   onCityLabelClick?: (payload: { event: MouseEvent, city: CityRiskDatum }) => void
   onLabelCreated?: (payload: { city: CityRiskDatum, label: CSS3DSprite }) => void
+  cityLabelRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement
 }
 
 const LABEL_OFFSET_Y = 13.5
@@ -63,7 +64,7 @@ export function buildCityMarkers(context: MarkerLayerContext): void {
     const markerBase = createMarkerBase(normalized, waveMeshArr)
     cityGroup.add(markerBase)
 
-    const label = createCityLabelSprite(city, normalized)
+    const label = createCityLabelSprite(city, normalized, context.cityLabelRenderer)
     label.position.set(0, LABEL_OFFSET_Y, 0)
     label.scale.setScalar(LABEL_SCALE)
     const labelElement = label.element as HTMLElement
@@ -181,26 +182,35 @@ function createMarkerBase(normalized: number, waveMeshArr: WaveMesh[]): THREE.Gr
   return group
 }
 
-function createCityLabelSprite(city: CityRiskDatum, normalized: number): CSS3DSprite {
-  const marker = document.createElement('div')
-  marker.className = 'zj-city-marker'
-  marker.setAttribute('data-city', city.id)
-  marker.style.pointerEvents = 'auto'
-  marker.style.cursor = 'pointer'
-  marker.style.setProperty('--marker-strength', (0.6 + normalized * 0.4).toFixed(2))
+function createCityLabelSprite(
+  city: CityRiskDatum,
+  normalized: number,
+  customRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement,
+): CSS3DSprite {
+  let marker: HTMLElement
 
-  if (city.rank && city.rank <= 3)
-    marker.classList.add('zj-city-marker--top')
+  if (customRenderer) {
+    marker = customRenderer(city, normalized)
+  }
+  else {
+    marker = document.createElement('div')
+    marker.className = 'zj-city-marker'
+    marker.setAttribute('data-city', city.id)
+    marker.style.pointerEvents = 'auto'
+    marker.style.cursor = 'pointer'
+    marker.style.setProperty('--marker-strength', (0.6 + normalized * 0.4).toFixed(2))
 
-  marker.innerHTML = `
-    <div class="zj-city-marker__panel">
-      <div class="zj-city-marker__name">
-        <span class="zj-city-marker__name-zh">${city.name}${city.value.toFixed(0)}</span>
+    if (city.rank && city.rank <= 3)
+      marker.classList.add('zj-city-marker--top')
+
+    marker.innerHTML = `
+      <div class="zj-city-marker__panel">
+        <div class="zj-city-marker__name">
+          <span class="zj-city-marker__name-zh">${city.name}${city.value.toFixed(0)}</span>
+        </div>
       </div>
-    </div>
-  `
+    `
+  }
 
-  const sprite = new CSS3DSprite(marker)
-
-  return sprite
+  return new CSS3DSprite(marker)
 }
