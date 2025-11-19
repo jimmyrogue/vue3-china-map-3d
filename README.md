@@ -121,6 +121,64 @@ interface CityDistrictDatum {
 }
 ```
 
+### 实例方法与状态
+
+`Map3D` 会通过 `defineExpose` 暴露一组方法与状态，借助模板 ref 即可访问：
+
+```vue
+<template>
+  <Map3D ref="mapRef" :city-data="cityData" />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { Map3D } from 'vue3-china-map-3d'
+
+const mapRef = ref<InstanceType<typeof Map3D> | null>(null)
+
+function resetView() {
+  mapRef.value?.focusProvince()
+}
+
+function jumpToCity(name: string) {
+  mapRef.value?.focusCity(name)
+}
+</script>
+```
+
+**可用方法/属性**:
+
+- `updateCityData(data)` / `updateCustomLabels(labels)`：在不重新挂载组件的情况下更新城市/自定义标签数据。
+- `focusProvince()` / `focusCity(cityName)` / `focusDistrict(cityName, districtName)`：手动切换视角到指定层级。
+- `setProvince(provinceId)`：切换到指定省份。当前构建仅内置浙江省数据，其余省份（如文档中的“福建省”示例）会提示暂未支持。
+- `currentRegion`：响应式对象，包含 `{ level, provinceId, provinceName, cityName, districtName, provinces }`。其中 `provinces` 提供所有可选省份条目（结构为 `{ id, name, supported }`）。
+
+`currentRegion` 可用于驱动省/市/区的联动绑定：
+
+```ts
+import { computed, ref, watch } from 'vue'
+import { Map3D } from 'vue3-china-map-3d'
+
+const mapRef = ref<InstanceType<typeof Map3D> | null>(null)
+const selectedProvince = ref('zhejiang')
+const provinces = computed(() => mapRef.value?.currentRegion.provinces ?? [])
+
+watch(selectedProvince, (id) => {
+  if (id)
+    mapRef.value?.setProvince(id)
+})
+
+watch(
+  () => mapRef.value?.currentRegion,
+  (region) => {
+    if (!region)
+      return
+    console.log('当前层级', region.level, region.cityName, region.districtName)
+  },
+  { deep: true }
+)
+```
+
 ## 🏷️ 标签控制
 
 ### 隐藏标签

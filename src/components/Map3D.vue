@@ -2,7 +2,7 @@
 import type { CityRiskDatum } from '../core/scene/map-config'
 import type { CityBoardDatum, CityDistrictDatum } from '../core/zhejiangCityBoards'
 import type { CustomLabelConfig } from '../core/scene/zhejiang-map-scene'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { ZhejiangMapScene } from '../core/scene/zhejiang-map-scene'
 
 const props = defineProps<{
@@ -27,8 +27,27 @@ const emit = defineEmits<{
   }): void
 }>()
 
+type CurrentRegionState = {
+  level: 'province' | 'city' | 'district'
+  provinceName: string
+  cityName: string | null
+  districtName: string | null
+}
+
 const mapContainerRef = ref<HTMLDivElement | null>(null)
 let mapScene: ZhejiangMapScene | null = null
+const currentRegion = reactive<CurrentRegionState>({
+  level: 'province',
+  provinceName: '浙江省',
+  cityName: null,
+  districtName: null,
+})
+
+function resetCurrentRegion() {
+  currentRegion.level = 'province'
+  currentRegion.cityName = null
+  currentRegion.districtName = null
+}
 
 function mountScene(initialData?: CityBoardDatum[] | CityRiskDatum[]) {
   if (!mapContainerRef.value)
@@ -38,6 +57,9 @@ function mountScene(initialData?: CityBoardDatum[] | CityRiskDatum[]) {
     onProgress: value => emit('loadingProgress', value),
     onComplete: () => emit('loadingComplete'),
     onLevelChange: (level, cityName, districtName) => {
+      currentRegion.level = level
+      currentRegion.cityName = cityName
+      currentRegion.districtName = districtName
       emit('levelChange', level, cityName, districtName)
     },
     onCityLabelClick: payload => emit('cityLabelClick', payload),
@@ -60,6 +82,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   mapScene?.dispose()
   mapScene = null
+  resetCurrentRegion()
 })
 
 function updateCityData(data?: CityBoardDatum[] | CityRiskDatum[]) {
@@ -129,6 +152,7 @@ defineExpose({
   focusProvince,
   focusDistrict,
   focusCity,
+  currentRegion,
 })
 </script>
 
