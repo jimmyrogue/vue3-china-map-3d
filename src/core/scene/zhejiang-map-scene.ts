@@ -16,14 +16,24 @@ import { getCityNormalTexture, getCityTexture, getDistrictTexture, loadCityGeo }
 import { createEnvironmentLayer } from './environment'
 import {
   buildCityDisplayData,
-
   CONTROL_LIMITS,
+  createMapProjection,
   DEFAULT_CITY_DISPLAY_DATA,
   MAP_BOUNDING_BOX,
   MAP_LAYER_CONFIG,
 } from './map-config'
 import { buildMapGeometry } from './map-geometry'
 import { buildCityMarkers } from './markers'
+
+export interface CustomLabelConfig {
+  id: string
+  position: [number, number]
+  height?: number
+  scale?: number
+  renderer: () => HTMLElement
+  onClick?: (event: MouseEvent, label: CustomLabelConfig) => void
+  onHover?: (isHovering: boolean, label: CustomLabelConfig) => void
+}
 
 export interface ZhejiangMapSceneOptions {
   onProgress: (value: number) => void
@@ -38,6 +48,7 @@ export interface ZhejiangMapSceneOptions {
   }) => void
   cityLabelRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement
   districtLabelRenderer?: (name: string, options: { value?: number, strength?: number }) => HTMLElement
+  customLabels?: CustomLabelConfig[]
 }
 
 export interface ZhejiangMapSceneMountOptions {
@@ -122,6 +133,8 @@ export class ZhejiangMapScene {
   private districtLabelSprites: CSS3DSprite[] = []
   private cityLabelSpritesByName: Map<string, CSS3DSprite> = new Map()
   private districtLabelSpritesByName: Map<string, CSS3DSprite> = new Map()
+  private customLabelSprites: CSS3DSprite[] = []
+  private customLabelSpritesById: Map<string, CSS3DSprite> = new Map()
   private loadedTextures: THREE.Texture[] = []
   private cityDisplayData: CityRiskDatum[] = DEFAULT_CITY_DISPLAY_DATA
   private cityDistrictData: Map<string, CityDistrictDatum[]> = new Map()
@@ -437,6 +450,8 @@ export class ZhejiangMapScene {
 
     this.rootGroup.add(this.mapGroup)
     this.scene.add(this.rootGroup)
+
+    this.buildCustomLabels(this.options.customLabels)
   }
 
   private readonly tryLoadTexture = (url: string): THREE.Texture | null => {
@@ -627,6 +642,100 @@ export class ZhejiangMapScene {
 
     this.districtLabelSprites = []
     this.districtLabelSpritesByName.clear()
+  }
+
+  private buildCustomLabels(labels?: CustomLabelConfig[]): void {
+    if (!labels || !labels.length) {
+      console.log('[CustomLabels] No custom labels to build')
+      return
+    }
+
+    console.log(`[CustomLabels] Building ${labels.length} custom labels`)
+    this.clearCustomLabels()
+
+    const projection = createMapProjection()
+
+    labels.forEach((config) => {
+      console.log(`[CustomLabels] Creating label: ${config.id} at position [${config.position[0]}, ${config.position[1]}]`)
+
+      const [x, y] = projection(config.position) || [0, 0]
+      const element = config.renderer()
+      element.style.pointerEvents = 'auto'
+
+      const sprite = new CSS3DSprite(element)
+      sprite.position.set(x, config.height ?? 10, y)
+      sprite.scale.setScalar(config.scale ?? 0.24)
+
+      if (config.onClick) {
+        const handler = (e: MouseEvent) => {
+          e.stopPropagation()
+          console.log(`[CustomLabels] Label clicked: ${config.id}`)
+          config.onClick!(e, config)
+        }
+        element.addEventListener('click', handler)
+        sprite.userData.__clickHandler = handler
+      }
+
+      if (config.onHover) {
+        const hoverHandler = (e: MouseEvent) => {
+          console.log(`[CustomLabels] Label hover: ${config.id}`)
+          config.onHover!(true, config)
+        }
+        const leaveHandler = (e: MouseEvent) => {
+          console.log(`[CustomLabels] Label leave: ${config.id}`)
+          config.onHover!(false, config)
+        }
+        element.addEventListener('mouseenter', hoverHandler)
+        element.addEventListener('mouseleave', leaveHandler)
+        sprite.userData.__hoverHandler = hoverHandler
+        sprite.userData.__leaveHandler = leaveHandler
+      }
+
+      sprite.userData.__labelId = config.id
+      this.mapGroup?.add(sprite)
+      this.customLabelSprites.push(sprite)
+      this.customLabelSpritesById.set(config.id, sprite)
+
+      console.log(`[CustomLabels] Label created successfully: ${config.id}`)
+    })
+
+    this.labelNeedsUpdate = true
+    console.log(`[CustomLabels] All ${labels.length} labels built successfully`)
+  }
+
+  private clearCustomLabels(): void {
+    if (this.customLabelSprites.length) {
+      console.log(`[CustomLabels] Clearing ${this.customLabelSprites.length} custom labels`)
+
+      this.customLabelSprites.forEach((sprite) => {
+        const handler = sprite.userData.__clickHandler
+        const hoverHandler = sprite.userData.__hoverHandler
+        const leaveHandler = sprite.userData.__leaveHandler
+        const element = sprite.element as HTMLElement | undefined
+
+        if (handler && element) {
+          element.removeEventListener('click', handler)
+        }
+        if (hoverHandler && element) {
+          element.removeEventListener('mouseenter', hoverHandler)
+        }
+        if (leaveHandler && element) {
+          element.removeEventListener('mouseleave', leaveHandler)
+        }
+
+        this.mapGroup?.remove(sprite)
+        this.disposeObject(sprite)
+      })
+    }
+
+    this.customLabelSprites = []
+    this.customLabelSpritesById.clear()
+    console.log('[CustomLabels] All custom labels cleared')
+  }
+
+  public updateCustomLabels(labels?: CustomLabelConfig[]): void {
+    console.log('[CustomLabels] Updating custom labels')
+    this.buildCustomLabels(labels)
   }
 
   private setActiveGeometryState(meshes: THREE.Mesh[], meshGroups: Map<string, THREE.Mesh[]>): void {
@@ -893,14 +1002,23 @@ export class ZhejiangMapScene {
     transformer: GeoToSceneTransformerResult,
     cityName: string,
   ): void {
-    if (!this.mapGroup)
+    console.log(`[DistrictLabels] Building district labels for city: ${cityName}`)
+    console.log(`[DistrictLabels] districtLabelRenderer: ${this.options.districtLabelRenderer ? 'CUSTOM' : 'DEFAULT'}`)
+
+    if (!this.mapGroup) {
+      console.log('[DistrictLabels] No mapGroup, skipping')
       return
+    }
 
     this.clearDistrictLabels()
 
     const features = geo.features ?? []
-    if (!features.length)
+    if (!features.length) {
+      console.log('[DistrictLabels] No features, skipping')
       return
+    }
+
+    console.log(`[DistrictLabels] Feature count: ${features.length}`)
 
     const labelHeight = MAP_LAYER_CONFIG.extrusionDepth + 3.4
     const scaleFactor = THREE.MathUtils.clamp(transformer.normalizedScale, 0.76, 1.6)
@@ -958,9 +1076,12 @@ export class ZhejiangMapScene {
     let marker: HTMLElement
 
     if (this.options.districtLabelRenderer) {
+      console.log(`[DistrictLabel] Using custom renderer for district: ${name}`)
       marker = this.options.districtLabelRenderer(name, options)
+      console.log('[DistrictLabel] Custom renderer executed successfully')
     }
     else {
+      console.log(`[DistrictLabel] Using default renderer for district: ${name}`)
       marker = document.createElement('div')
       marker.className = 'zj-city-marker zj-city-marker--district'
       marker.dataset.district = name
@@ -1548,6 +1669,7 @@ export class ZhejiangMapScene {
     this.cityMeshes = []
     this.clearCityMarkers()
     this.clearDistrictLabels()
+    this.clearCustomLabels()
     this.clearMapGeometry()
     this.currentCityGeo = null
     this.currentCityTransformer = null

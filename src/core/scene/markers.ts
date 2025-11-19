@@ -45,10 +45,15 @@ const sharedGeometries = {
 export function buildCityMarkers(context: MarkerLayerContext): void {
   const { mapGroup, waveMeshArr, cityMarkerGroups, cityMarkerGroupsOptimized, cityData } = context
 
+  console.log(`[CityMarkers] Building city markers, cityLabelRenderer: ${context.cityLabelRenderer ? 'CUSTOM' : 'DEFAULT'}`)
+  console.log(`[CityMarkers] City data count: ${cityData.length}`)
+
   const projection = createMapProjection()
 
-  if (!cityData.length)
+  if (!cityData.length) {
+    console.log('[CityMarkers] No city data, skipping marker build')
     return
+  }
 
   const maxValue = Math.max(...cityData.map(city => city.value)) || 1
   const minValue = Math.min(...cityData.map(city => city.value)) || 0
@@ -190,9 +195,12 @@ function createCityLabelSprite(
   let marker: HTMLElement
 
   if (customRenderer) {
+    console.log(`[CityLabel] Using custom renderer for city: ${city.name}`)
     marker = customRenderer(city, normalized)
+    console.log('[CityLabel] Custom renderer executed successfully')
   }
   else {
+    console.log(`[CityLabel] Using default renderer for city: ${city.name}`)
     marker = document.createElement('div')
     marker.className = 'zj-city-marker'
     marker.setAttribute('data-city', city.id)

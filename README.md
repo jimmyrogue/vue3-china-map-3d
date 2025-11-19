@@ -93,6 +93,7 @@ function handleCityClick(city: any) {
 | `cityData` | `CityBoardDatum[]` | `[]` | 城市数据数组 |
 | `cityLabelRenderer` | `(city, normalized) => HTMLElement` | - | 自定义城市标签渲染函数 |
 | `districtLabelRenderer` | `(name, options) => HTMLElement` | - | 自定义区县标签渲染函数 |
+| `customLabels` | `CustomLabelConfig[]` | - | 完全自定义标签配置数组 |
 
 ### Events
 
@@ -167,6 +168,7 @@ function customDistrictLabel(
 ```
 
 **参数说明**:
+
 - `cityLabelRenderer(city, normalized)`:
   - `city`: 城市数据对象
   - `normalized`: 归一化值 (0-1)，用于表示数据强度
@@ -174,6 +176,80 @@ function customDistrictLabel(
   - `name`: 区县名称
   - `options.value`: 区县数值
   - `options.strength`: 强度值 (0-1)
+
+### 完全自定义标签
+
+除了城市和区县标签，你还可以在地图上添加完全自定义的标签，位置、样式、交互完全由你控制：
+
+```vue
+<template>
+  <Map3D :custom-labels="customLabels" />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { Map3D } from 'vue3-china-map-3d'
+import type { CustomLabelConfig } from 'vue3-china-map-3d'
+
+const customLabels = ref<CustomLabelConfig[]>([
+  {
+    id: 'poi-1',
+    position: [120.2, 30.3], // 经纬度 [lng, lat]
+    height: 15,              // 可选：Y 轴高度偏移，默认 10
+    scale: 0.3,              // 可选：缩放比例，默认 0.24
+    renderer: () => {
+      const div = document.createElement('div')
+      div.className = 'custom-poi'
+      div.innerHTML = `
+        <div style="
+          background: rgba(255, 100, 100, 0.9);
+          padding: 8px 12px;
+          border-radius: 4px;
+          color: white;
+          font-weight: bold;
+        ">
+          📍 重要地点
+        </div>
+      `
+      return div
+    },
+    onClick: (event, label) => {
+      console.log('标签被点击:', label.id)
+    },
+    onHover: (isHovering, label) => {
+      console.log(isHovering ? '鼠标进入' : '鼠标离开', label.id)
+    }
+  }
+])
+</script>
+```
+
+**CustomLabelConfig 接口**:
+
+```typescript
+interface CustomLabelConfig {
+  id: string                    // 唯一标识
+  position: [number, number]    // 经纬度 [lng, lat]
+  height?: number               // Y 轴高度偏移，默认 10
+  scale?: number                // 缩放比例，默认 0.24
+  renderer: () => HTMLElement   // DOM 渲染函数
+  onClick?: (event: MouseEvent, label: CustomLabelConfig) => void
+  onHover?: (isHovering: boolean, label: CustomLabelConfig) => void
+}
+```
+
+**动态更新标签**:
+
+```typescript
+// 通过 ref 更新
+customLabels.value = [
+  { id: 'new-label', position: [121.5, 31.2], renderer: () => { /* ... */ } }
+]
+
+// 或通过组件方法更新
+const mapRef = ref()
+mapRef.value?.updateCustomLabels([...])
+```
 
 ## 🎮 交互说明
 

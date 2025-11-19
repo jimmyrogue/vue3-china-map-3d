@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CityRiskDatum } from '../core/scene/map-config'
 import type { CityBoardDatum, CityDistrictDatum } from '../core/zhejiangCityBoards'
+import type { CustomLabelConfig } from '../core/scene/zhejiang-map-scene'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ZhejiangMapScene } from '../core/scene/zhejiang-map-scene'
 
@@ -8,6 +9,7 @@ const props = defineProps<{
   cityData?: CityBoardDatum[] | CityRiskDatum[]
   cityLabelRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement
   districtLabelRenderer?: (name: string, options: { value?: number, strength?: number }) => HTMLElement
+  customLabels?: CustomLabelConfig[]
 }>()
 
 const emit = defineEmits<{
@@ -40,6 +42,7 @@ function mountScene(initialData?: CityBoardDatum[] | CityRiskDatum[]) {
     onDistrictLabelClick: payload => emit('districtLabelClick', payload),
     cityLabelRenderer: props.cityLabelRenderer,
     districtLabelRenderer: props.districtLabelRenderer,
+    customLabels: props.customLabels,
   })
   mapScene.mount(mapContainerRef.value, {
     cityData: initialData ?? props.cityData,
@@ -57,6 +60,10 @@ onBeforeUnmount(() => {
 
 function updateCityData(data?: CityBoardDatum[] | CityRiskDatum[]) {
   mapScene?.updateCityData(data)
+}
+
+function updateCustomLabels(labels?: CustomLabelConfig[]) {
+  mapScene?.updateCustomLabels(labels)
 }
 
 async function focusProvince() {
@@ -102,8 +109,19 @@ watch(
   { deep: true },
 )
 
+watch(
+  () => props.customLabels,
+  (next) => {
+    if (!mapScene)
+      return
+    mapScene.updateCustomLabels(next)
+  },
+  { deep: true },
+)
+
 defineExpose({
   updateCityData,
+  updateCustomLabels,
   focusProvince,
   focusDistrict,
   focusCity,
