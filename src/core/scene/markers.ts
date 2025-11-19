@@ -70,30 +70,27 @@ export function buildCityMarkers(context: MarkerLayerContext): void {
     cityGroup.add(markerBase)
 
     const label = createCityLabelSprite(city, normalized, context.cityLabelRenderer)
-    label.position.set(0, LABEL_OFFSET_Y, 0)
-    label.scale.setScalar(LABEL_SCALE)
-    const labelElement = label.element as HTMLElement
-    const clickHandler = (event: MouseEvent): void => {
-      event.stopPropagation()
-      // console.info('[ZhejiangMapScene] city label clicked', {
-      //   id: city.id,
-      //   name: city.name,
-      //   value: city.value,
-      // })
-      context.onCityLabelClick?.({
-        event,
-        city,
-      })
+    if (label) {
+      label.position.set(0, LABEL_OFFSET_Y, 0)
+      label.scale.setScalar(LABEL_SCALE)
+      const labelElement = label.element as HTMLElement
+      const clickHandler = (event: MouseEvent): void => {
+        event.stopPropagation()
+        context.onCityLabelClick?.({
+          event,
+          city,
+        })
+      }
+      labelElement.addEventListener('click', clickHandler)
+      label.userData = {
+        ...label.userData,
+        __clickHandler: clickHandler,
+        __baseY: label.position.y,
+        __labelName: city.name,
+      }
+      cityGroup.add(label)
+      context.onLabelCreated?.({ city, label })
     }
-    labelElement.addEventListener('click', clickHandler)
-    label.userData = {
-      ...label.userData,
-      __clickHandler: clickHandler,
-      __baseY: label.position.y,
-      __labelName: city.name,
-    }
-    cityGroup.add(label)
-    context.onLabelCreated?.({ city, label })
 
     cityGroup.position.set(x, MAP_LAYER_CONFIG.extrusionDepth + 1.2, y)
     cityGroup.userData = {
@@ -190,14 +187,27 @@ function createMarkerBase(normalized: number, waveMeshArr: WaveMesh[]): THREE.Gr
 function createCityLabelSprite(
   city: CityRiskDatum,
   normalized: number,
-  customRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement,
-): CSS3DSprite {
+  customRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement | null | false,
+): CSS3DSprite | null {
   let marker: HTMLElement
 
   if (customRenderer) {
     console.log(`[CityLabel] Using custom renderer for city: ${city.name}`)
-    marker = customRenderer(city, normalized)
+    const result = customRenderer(city, normalized)
     console.log('[CityLabel] Custom renderer executed successfully')
+
+    if (result === null || result === false) {
+      console.log(`[CityLabel] Custom renderer returned ${result}, hiding label for city: ${city.name}`)
+      return null
+    }
+
+    if (!result) {
+      console.error(`[CityLabel] ERROR: Custom renderer returned invalid value for city: ${city.name}`)
+      throw new Error(`cityLabelRenderer must return HTMLElement, null, or false, got ${result}`)
+    }
+
+    marker = result
+    console.log('[CityLabel] Marker element:', marker, 'tagName:', marker.tagName)
   }
   else {
     console.log(`[CityLabel] Using default renderer for city: ${city.name}`)

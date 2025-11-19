@@ -28,6 +28,7 @@ import { buildCityMarkers } from './markers'
 export interface CustomLabelConfig {
   id: string
   position: [number, number]
+  regionName?: string
   height?: number
   scale?: number
   renderer: () => HTMLElement
@@ -47,7 +48,7 @@ export interface ZhejiangMapSceneOptions {
     districtData: CityDistrictDatum | null
   }) => void
   cityLabelRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement
-  districtLabelRenderer?: (name: string, options: { value?: number, strength?: number }) => HTMLElement
+  districtLabelRenderer?: (name: string, options: { value?: number, strength?: number }) => HTMLElement | null | false
   customLabels?: CustomLabelConfig[]
 }
 
@@ -545,6 +546,7 @@ export class ZhejiangMapScene {
     this._currentDistrictTransformer = null
     this.refreshCityMarkers()
     this.reportLevelChange('province', null, null)
+    this.updateCustomLabelsVisibility()
 
     if (options.animateCamera)
       this.animateToProvinceView()
@@ -660,11 +662,24 @@ export class ZhejiangMapScene {
 
       const [x, y] = projection(config.position) || [0, 0]
       const element = config.renderer()
+
+      if (!element) {
+        console.error(`[CustomLabels] ERROR: Renderer returned null/undefined for label: ${config.id}`)
+        throw new Error(`customLabel renderer must return a valid HTMLElement, got ${element}`)
+      }
+
+      console.log(`[CustomLabels] Element created for ${config.id}:`, element, 'tagName:', element.tagName)
       element.style.pointerEvents = 'auto'
 
       const sprite = new CSS3DSprite(element)
-      sprite.position.set(x, config.height ?? 10, y)
+      const defaultHeight = MAP_LAYER_CONFIG.extrusionDepth + 1.2
+      sprite.position.set(x, config.height ?? defaultHeight, y)
       sprite.scale.setScalar(config.scale ?? 0.24)
+
+      // 先设置 userData，确保动画能正确使用
+      sprite.userData.__labelId = config.id
+      sprite.userData.__baseY = sprite.position.y
+      sprite.userData.__regionName = config.regionName
 
       if (config.onClick) {
         const handler = (e: MouseEvent) => {
@@ -676,22 +691,21 @@ export class ZhejiangMapScene {
         sprite.userData.__clickHandler = handler
       }
 
-      if (config.onHover) {
-        const hoverHandler = () => {
-          console.log(`[CustomLabels] Label hover: ${config.id}`)
-          config.onHover!(true, config)
-        }
-        const leaveHandler = () => {
-          console.log(`[CustomLabels] Label leave: ${config.id}`)
-          config.onHover!(false, config)
-        }
-        element.addEventListener('mouseenter', hoverHandler)
-        element.addEventListener('mouseleave', leaveHandler)
-        sprite.userData.__hoverHandler = hoverHandler
-        sprite.userData.__leaveHandler = leaveHandler
+      // 添加默认的悬停动画
+      const hoverHandler = () => {
+        console.log(`[CustomLabels] Label hover: ${config.id}`)
+        this.animateCustomLabelHover(sprite, true)
+        config.onHover?.(true, config)
       }
-
-      sprite.userData.__labelId = config.id
+      const leaveHandler = () => {
+        console.log(`[CustomLabels] Label leave: ${config.id}`)
+        this.animateCustomLabelHover(sprite, false)
+        config.onHover?.(false, config)
+      }
+      element.addEventListener('mouseenter', hoverHandler)
+      element.addEventListener('mouseleave', leaveHandler)
+      sprite.userData.__hoverHandler = hoverHandler
+      sprite.userData.__leaveHandler = leaveHandler
       this.mapGroup?.add(sprite)
       this.customLabelSprites.push(sprite)
       this.customLabelSpritesById.set(config.id, sprite)
@@ -700,6 +714,7 @@ export class ZhejiangMapScene {
     })
 
     this.labelNeedsUpdate = true
+    this.updateCustomLabelsVisibility()
     console.log(`[CustomLabels] All ${labels.length} labels built successfully`)
   }
 
@@ -901,6 +916,7 @@ export class ZhejiangMapScene {
       this.currentCityName = cityName
       this.currentDistrictName = null
       this.reportLevelChange('city', cityName, null)
+      this.updateCustomLabelsVisibility()
       this.animateToCityView()
     }
     finally {
@@ -990,6 +1006,7 @@ export class ZhejiangMapScene {
       this.currentCityName = cityName
       this.currentDistrictName = districtName
       this.reportLevelChange('district', cityName, districtName)
+      this.updateCustomLabelsVisibility()
       this.animateToDistrictView(geometryTransform)
     }
     finally {
@@ -1049,6 +1066,9 @@ export class ZhejiangMapScene {
         strength: districtInfo?.normalized,
       })
 
+      if (!sprite)
+        return
+
       sprite.position.set(x, labelHeight, -mappedY)
       sprite.scale.setScalar(ZhejiangMapScene.DISTRICT_LABEL_BASE_SCALE * scaleFactor)
       this.bindDistrictLabelInteraction(sprite, cityName, districtName, districtDatum)
@@ -1072,13 +1092,26 @@ export class ZhejiangMapScene {
   private createDistrictLabelSprite(
     name: string,
     options: { value?: number, strength?: number } = {},
-  ): CSS3DSprite {
+  ): CSS3DSprite | null {
     let marker: HTMLElement
 
     if (this.options.districtLabelRenderer) {
       console.log(`[DistrictLabel] Using custom renderer for district: ${name}`)
-      marker = this.options.districtLabelRenderer(name, options)
+      const result = this.options.districtLabelRenderer(name, options)
       console.log('[DistrictLabel] Custom renderer executed successfully')
+
+      if (result === null || result === false) {
+        console.log(`[DistrictLabel] Custom renderer returned ${result}, hiding label for district: ${name}`)
+        return null
+      }
+
+      if (!result) {
+        console.error(`[DistrictLabel] ERROR: Custom renderer returned invalid value for district: ${name}`)
+        throw new Error(`districtLabelRenderer must return HTMLElement, null, or false, got ${result}`)
+      }
+
+      marker = result
+      console.log('[DistrictLabel] Marker element:', marker, 'tagName:', marker.tagName)
     }
     else {
       console.log(`[DistrictLabel] Using default renderer for district: ${name}`)
@@ -1141,6 +1174,9 @@ export class ZhejiangMapScene {
       value: districtInfo?.value ?? districtDatum?.value,
       strength: districtInfo?.normalized,
     })
+
+    if (!sprite)
+      return
 
     sprite.position.set(x, labelHeight, -mappedY)
     sprite.scale.setScalar(ZhejiangMapScene.DISTRICT_LABEL_BASE_SCALE * scaleFactor)
@@ -1444,6 +1480,7 @@ export class ZhejiangMapScene {
 
     this.currentHoveredLabelName = hoveredRegionName
     this.animateRegionLabelHover(hoveredRegionName, true)
+    this.animateMatchingCustomLabels(hoveredRegionName, true)
   }
 
   private handleMeshLeave(): void {
@@ -1468,6 +1505,8 @@ export class ZhejiangMapScene {
 
     if (this.currentHoveredLabelName)
       this.animateRegionLabelHover(this.currentHoveredLabelName, false)
+
+    this.animateMatchingCustomLabels(this.currentHoveredLabelName, false)
 
     this.currentHoveredMeshes = []
     this.currentHoveredKey = null
@@ -1508,6 +1547,64 @@ export class ZhejiangMapScene {
         this.labelNeedsUpdate = true
       },
     })
+  }
+
+  private animateCustomLabelHover(sprite: CSS3DSprite, isHovering: boolean): void {
+    const userData = sprite.userData as { __baseY?: number } | undefined
+    const baseY = typeof userData?.__baseY === 'number' ? userData.__baseY : sprite.position.y
+
+    const offset = 8
+    const targetY = isHovering ? baseY + offset : baseY
+
+    gsap.killTweensOf(sprite.position)
+    gsap.to(sprite.position, {
+      y: targetY,
+      duration: 0.45,
+      ease: isHovering ? 'power2.out' : 'power2.inOut',
+      onUpdate: () => {
+        this.labelNeedsUpdate = true
+      },
+    })
+  }
+
+  private animateMatchingCustomLabels(regionName: string | null, isHovering: boolean): void {
+    if (!regionName)
+      return
+
+    this.customLabelSprites.forEach((sprite) => {
+      const userData = sprite.userData as { __regionName?: string }
+      if (userData.__regionName === regionName)
+        this.animateCustomLabelHover(sprite, isHovering)
+    })
+  }
+
+  private updateCustomLabelsVisibility(): void {
+    this.customLabelSprites.forEach((sprite) => {
+      const userData = sprite.userData as { __regionName?: string }
+      const regionName = userData.__regionName
+
+      if (!regionName) {
+        sprite.visible = false
+        return
+      }
+
+      const parts = regionName.split(',').map(p => p.trim())
+
+      if (this.currentLevel === 'province') {
+        sprite.visible = true
+      }
+      else if (this.currentLevel === 'city' && this.currentCityName) {
+        sprite.visible = parts.includes(this.currentCityName)
+      }
+      else if (this.currentLevel === 'district' && this.currentDistrictName) {
+        sprite.visible = parts.includes(this.currentDistrictName)
+      }
+      else {
+        sprite.visible = false
+      }
+    })
+
+    this.labelNeedsUpdate = true
   }
 
   private registerGlobalListeners(): void {

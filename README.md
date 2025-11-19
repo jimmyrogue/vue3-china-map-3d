@@ -91,8 +91,8 @@ function handleCityClick(city: any) {
 | 属性 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | `cityData` | `CityBoardDatum[]` | `[]` | 城市数据数组 |
-| `cityLabelRenderer` | `(city, normalized) => HTMLElement` | - | 自定义城市标签渲染函数 |
-| `districtLabelRenderer` | `(name, options) => HTMLElement` | - | 自定义区县标签渲染函数 |
+| `cityLabelRenderer` | `(city, normalized) => HTMLElement \| null \| false` | - | 自定义城市标签渲染函数 |
+| `districtLabelRenderer` | `(name, options) => HTMLElement \| null \| false` | - | 自定义区县标签渲染函数 |
 | `customLabels` | `CustomLabelConfig[]` | - | 完全自定义标签配置数组 |
 
 ### Events
@@ -132,7 +132,12 @@ interface CityDistrictDatum {
 import { Map3D } from 'vue3-china-map-3d'
 import type { CityRiskDatum } from 'vue3-china-map-3d'
 
-function customCityLabel(city: CityRiskDatum, normalized: number): HTMLElement {
+function customCityLabel(city: CityRiskDatum, normalized: number): HTMLElement | null | false {
+  // 返回 null 或 false 可以隐藏特定城市的标签
+  if (city.name === '杭州市') {
+    return null // 不显示杭州的标签
+  }
+
   const div = document.createElement('div')
   div.className = 'my-city-label'
   div.innerHTML = `<strong>${city.name}</strong>: ${city.value}`
@@ -156,7 +161,12 @@ import { Map3D } from 'vue3-china-map-3d'
 function customDistrictLabel(
   name: string,
   options: { value?: number, strength?: number }
-): HTMLElement {
+): HTMLElement | null | false {
+  // 返回 null 或 false 可以隐藏特定区县的标签
+  if (name === '西湖区') {
+    return false // 不显示西湖区的标签
+  }
+
   const div = document.createElement('div')
   div.className = 'my-district-label'
   div.innerHTML = `${name} ${options.value || ''}`
@@ -172,10 +182,12 @@ function customDistrictLabel(
 - `cityLabelRenderer(city, normalized)`:
   - `city`: 城市数据对象
   - `normalized`: 归一化值 (0-1)，用于表示数据强度
+  - **返回值**: `HTMLElement` 显示标签 | `null` 或 `false` 隐藏标签
 - `districtLabelRenderer(name, options)`:
   - `name`: 区县名称
   - `options.value`: 区县数值
   - `options.strength`: 强度值 (0-1)
+  - **返回值**: `HTMLElement` 显示标签 | `null` 或 `false` 隐藏标签
 
 ### 完全自定义标签
 
@@ -230,11 +242,53 @@ const customLabels = ref<CustomLabelConfig[]>([
 interface CustomLabelConfig {
   id: string                    // 唯一标识
   position: [number, number]    // 经纬度 [lng, lat]
+  regionName?: string           // 所属区域完整路径，如 "浙江省,宁波市,江北区"
   height?: number               // Y 轴高度偏移，默认 10
   scale?: number                // 缩放比例，默认 0.24
   renderer: () => HTMLElement   // DOM 渲染函数
   onClick?: (event: MouseEvent, label: CustomLabelConfig) => void
   onHover?: (isHovering: boolean, label: CustomLabelConfig) => void
+}
+```
+
+**层级可见性控制**:
+
+通过 `regionName` 属性，标签会根据当前地图层级自动显示/隐藏：
+
+```typescript
+const customLabels = ref<CustomLabelConfig[]>([
+  {
+    id: 'hangzhou-poi',
+    position: [120.2, 30.3],
+    regionName: '浙江省,杭州市,西湖区',  // 完整的层级路径
+    renderer: () => { /* ... */ }
+  },
+  {
+    id: 'ningbo-poi',
+    position: [121.5, 29.8],
+    regionName: '浙江省,宁波市,江北区,孔浦街道',
+    renderer: () => { /* ... */ }
+  }
+])
+```
+
+**可见性规则**:
+
+- **省级视图**: 显示所有有 `regionName` 的标签
+- **市级视图**: 只显示路径中包含当前城市的标签（如进入"杭州市"，只显示包含"杭州市"的标签）
+- **区级视图**: 只显示路径中包含当前区县的标签（如进入"江北区"，只显示包含"江北区"的标签）
+- **无 `regionName`**: 标签在所有层级都隐藏
+
+**悬浮交互**:
+
+标签会在其对应区域被鼠标悬浮时自动上浮，增强交互反馈：
+
+```typescript
+{
+  id: 'poi-1',
+  position: [120.2, 30.3],
+  regionName: '浙江省,杭州市,西湖区',  // 只在西湖区被悬浮时上浮
+  renderer: () => { /* ... */ }
 }
 ```
 
