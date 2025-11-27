@@ -1,5 +1,5 @@
 {
-  "name": "@jimmyrogue/vue3-china-map-3d",
+  "name": "vue3-china-map-3d",
   "version": "1.0.5",
   "private": false,
   "description": "Vue 3 + Three.js 中国省份3D地图组件",
@@ -54,13 +54,10 @@
     "visualization",
     "data-visualization"
   ],
-  "author": "",
+  "author": "jimmyrogue",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "url": "git+https://github.com/jimmyrogue/vue3-china-map-3d.git"
   }
 }
