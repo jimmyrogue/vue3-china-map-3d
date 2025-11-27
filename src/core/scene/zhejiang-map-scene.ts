@@ -220,6 +220,10 @@ export class ZhejiangMapScene {
       this.cityDisplayData = buildCityDisplayData(options.cityData)
       this.rebuildCityDistrictData(options.cityData)
     }
+    else if (this.options.hideCityLabel) {
+      this.cityDisplayData = []
+      this.rebuildCityDistrictData([])
+    }
     else {
       this.rebuildCityDistrictData()
     }
@@ -796,6 +800,18 @@ export class ZhejiangMapScene {
   public updateCustomLabels(labels?: CustomLabelConfig[]): void {
     console.log('[CustomLabels] Updating custom labels')
     this.buildCustomLabels(labels)
+  }
+
+  public updateLabelVisibility(hideCityLabel?: boolean, hideDistrictLabel?: boolean): void {
+    if (hideCityLabel !== undefined)
+      this.options.hideCityLabel = hideCityLabel
+    if (hideDistrictLabel !== undefined)
+      this.options.hideDistrictLabel = hideDistrictLabel
+
+    if (this.currentLevel === 'province')
+      this.refreshCityMarkers()
+    else if (this.currentLevel === 'city')
+      this.refreshDistrictLabelsForCurrentCity()
   }
 
   private setActiveGeometryState(meshes: THREE.Mesh[], meshGroups: Map<string, THREE.Mesh[]>): void {

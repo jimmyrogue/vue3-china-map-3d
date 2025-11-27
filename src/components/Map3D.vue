@@ -146,6 +146,15 @@ watch(
   { deep: true },
 )
 
+watch(
+  () => [props.hideCityLabel, props.hideDistrictLabel],
+  () => {
+    if (!mapScene)
+      return
+    mapScene.updateLabelVisibility(props.hideCityLabel, props.hideDistrictLabel)
+  },
+)
+
 defineExpose({
   updateCityData,
   updateCustomLabels,

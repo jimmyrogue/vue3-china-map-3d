@@ -46,13 +46,15 @@ const sharedGeometries = {
 export function buildCityMarkers(context: MarkerLayerContext): void {
   const { mapGroup, waveMeshArr, cityMarkerGroups, cityMarkerGroupsOptimized, cityData } = context
 
+  console.log('[CityMarkers] hideCityLabel:', context.hideCityLabel)
+  console.log('[CityMarkers] cityData length:', cityData.length)
+
   if (context.hideCityLabel) {
     console.log('[CityMarkers] hideCityLabel is true, skipping all city markers')
     return
   }
 
   console.log(`[CityMarkers] Building city markers, cityLabelRenderer: ${context.cityLabelRenderer ? 'CUSTOM' : 'DEFAULT'}`)
-  console.log(`[CityMarkers] City data count: ${cityData.length}`)
 
   const projection = createMapProjection()
 
