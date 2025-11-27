@@ -9,7 +9,7 @@
 默认情况下，资源会从以下路径加载：
 
 ```
-http://your-domain.com/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets/
+http://your-domain.com/node_modules/vue3-china-map-3d/dist/assets/
 ```
 
 这在大多数情况下都能正常工作，因为包会使用 `import.meta.url` 动态计算资源的实际位置。
@@ -22,11 +22,11 @@ http://your-domain.com/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets/
 
 ```typescript
 import { createApp } from 'vue'
-import { setAssetsBasePath } from '@jimmyrogue/vue3-china-map-3d'
+import { setAssetsBasePath } from 'vue3-china-map-3d'
 import App from './App.vue'
 
 // 设置自定义资源路径
-setAssetsBasePath('https://cdn.example.com/@jimmyrogue/vue3-china-map-3d/assets')
+setAssetsBasePath('https://cdn.example.com/vue3-china-map-3d/assets')
 
 createApp(App).mount('#app')
 ```
@@ -36,7 +36,7 @@ createApp(App).mount('#app')
 ```vue
 <script setup lang="ts">
 import { onBeforeMount } from 'vue'
-import { Map3D, setAssetsBasePath } from '@jimmyrogue/vue3-china-map-3d'
+import { Map3D, setAssetsBasePath } from 'vue3-china-map-3d'
 
 onBeforeMount(() => {
   // 在组件挂载前设置资源路径
@@ -59,7 +59,7 @@ onBeforeMount(() => {
 
 ```bash
 # 检查本地构建产物
-ls -la node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets/
+ls -la node_modules/vue3-china-map-3d/dist/assets/
 
 # 应该看到以下目录结构：
 # assets/
@@ -108,10 +108,10 @@ img.src = testUrl
 
 **解决方案**：
 ```typescript
-import { setAssetsBasePath } from '@jimmyrogue/vue3-china-map-3d'
+import { setAssetsBasePath } from 'vue3-china-map-3d'
 
 // 根据你的实际部署路径调整
-setAssetsBasePath('/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets')
+setAssetsBasePath('/node_modules/vue3-china-map-3d/dist/assets')
 ```
 
 #### 问题 2：CORS 错误
@@ -135,7 +135,7 @@ setAssetsBasePath('/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets')
 setAssetsBasePath('https://your-domain.com/assets')
 
 // 或者使用相对于根目录的路径
-setAssetsBasePath('/static/@jimmyrogue/vue3-china-map-3d/assets')
+setAssetsBasePath('/static/vue3-china-map-3d/assets')
 ```
 
 ## 📦 部署建议
@@ -167,9 +167,9 @@ module.exports = {
 如果你将包部署到 CDN，确保目录结构如下：
 
 ```
-https://cdn.example.com/@jimmyrogue/vue3-china-map-3d/
-├── @jimmyrogue/vue3-china-map-3d.es.js
-├── @jimmyrogue/vue3-china-map-3d.umd.js
+https://cdn.example.com/vue3-china-map-3d/
+├── vue3-china-map-3d.es.js
+├── vue3-china-map-3d.umd.js
 ├── style.css
 └── assets/
     ├── geo/
@@ -181,7 +181,7 @@ https://cdn.example.com/@jimmyrogue/vue3-china-map-3d/
 然后在代码中配置：
 
 ```typescript
-setAssetsBasePath('https://cdn.example.com/@jimmyrogue/vue3-china-map-3d/assets')
+setAssetsBasePath('https://cdn.example.com/vue3-china-map-3d/assets')
 ```
 
 ### Nginx 静态服务器
@@ -189,8 +189,8 @@ setAssetsBasePath('https://cdn.example.com/@jimmyrogue/vue3-china-map-3d/assets'
 确保 Nginx 配置允许访问静态资源：
 
 ```nginx
-location /node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets/ {
-    alias /path/to/node_modules/@jimmyrogue/vue3-china-map-3d/dist/assets/;
+location /node_modules/vue3-china-map-3d/dist/assets/ {
+    alias /path/to/node_modules/vue3-china-map-3d/dist/assets/;
     expires 1y;
     add_header Cache-Control "public, immutable";
 }
@@ -210,7 +210,7 @@ localStorage.setItem('DEBUG_ASSETS', 'true')
 或者手动检查资源加载逻辑：
 
 ```typescript
-import { getAssetUrl } from '@jimmyrogue/vue3-china-map-3d/dist/@jimmyrogue/vue3-china-map-3d.es.js'
+import { getAssetUrl } from 'vue3-china-map-3d/dist/vue3-china-map-3d.es.js'
 
 // 注意：这是内部 API，仅用于调试
 console.log('Base Color URL:', getAssetUrl('textures/zhejiang/baseColor.png'))
@@ -227,4 +227,4 @@ console.log('City Texture URL:', getAssetUrl('images/city/hangzhou.jpg'))
 4. Network 标签中失败的资源请求 URL
 5. 你的 `setAssetsBasePath()` 配置（如果有）
 
-在 GitHub Issues 中提交问题：https://github.com/your-repo/@jimmyrogue/vue3-china-map-3d/issues
+在 GitHub Issues 中提交问题：https://github.com/your-repo/vue3-china-map-3d/issues
