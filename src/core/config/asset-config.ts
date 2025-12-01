@@ -3,6 +3,9 @@
  * 用于管理库的资源路径配置
  */
 
+// 默认使用线上 CDN 地址
+const DEFAULT_CDN_BASE_PATH = 'https://dowload.20001220.com/zhejiang'
+
 let customAssetsBasePath: string | null = null
 let debugMode = false
 
@@ -51,50 +54,11 @@ export function getAssetUrl(path: string): string {
     return finalUrl
   }
 
-  // 开发模式：使用 Vite 的 new URL 处理
-  // @ts-ignore - Vite 会在运行时注入 import.meta.env
-  if (import.meta.env?.DEV) {
-    finalUrl = new URL(`../../../assets/${path}`, import.meta.url).href
-    if (debugMode) {
-      console.log(`[Vue3ChinaMap3D] 开发模式: ${path} -> ${finalUrl}`)
-    }
-    return finalUrl
-  }
+  // 默认使用线上 CDN 地址
+  finalUrl = `${DEFAULT_CDN_BASE_PATH}/${path}`
 
-  // 生产模式：动态构建路径
-  const currentUrl = import.meta.url
-
-  // 检测是否是 Vite 的依赖预构建路径（包含 .vite/deps/）
-  if (currentUrl.includes('/.vite/deps/')) {
-    // Vite 依赖预构建模式：使用固定的包路径
-    // 从 http://host:port/node_modules/.vite/deps/vue3-china-map-3d.js
-    // 转换为 http://host:port/node_modules/vue3-china-map-3d/dist/assets/
-    const urlObj = new URL(currentUrl)
-    const origin = urlObj.origin
-    finalUrl = `${origin}/node_modules/vue3-china-map-3d/dist/assets/${path}`
-
-    if (debugMode) {
-      console.log(`[Vue3ChinaMap3D] Vite 依赖预构建模式:`)
-      console.log(`  - 当前模块 URL: ${currentUrl}`)
-      console.log(`  - 检测到 .vite/deps/ 路径`)
-      console.log(`  - Origin: ${origin}`)
-      console.log(`  - 资源路径: ${path}`)
-      console.log(`  - 最终 URL: ${finalUrl}`)
-    }
-  } else {
-    // 正常生产模式：相对于当前模块路径
-    // import.meta.url 在运行时会是类似：
-    // "http://localhost:3000/node_modules/vue3-china-map-3d/dist/vue3-china-map-3d.es.js"
-    const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'))
-    finalUrl = `${baseUrl}/assets/${path}`
-
-    if (debugMode) {
-      console.log(`[Vue3ChinaMap3D] 生产模式:`)
-      console.log(`  - 当前模块 URL: ${currentUrl}`)
-      console.log(`  - 基础 URL: ${baseUrl}`)
-      console.log(`  - 资源路径: ${path}`)
-      console.log(`  - 最终 URL: ${finalUrl}`)
-    }
+  if (debugMode) {
+    console.log(`[Vue3ChinaMap3D] 使用 CDN 地址: ${path} -> ${finalUrl}`)
   }
 
   return finalUrl
