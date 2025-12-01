@@ -1,33 +1,9 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
-import { copyFileSync, mkdirSync, readdirSync } from 'fs'
-import { join } from 'path'
-
-function copyAssets() {
-  return {
-    name: 'copy-assets',
-    closeBundle() {
-      const copyDir = (src: string, dest: string) => {
-        mkdirSync(dest, { recursive: true })
-        const entries = readdirSync(src, { withFileTypes: true })
-        for (const entry of entries) {
-          const srcPath = join(src, entry.name)
-          const destPath = join(dest, entry.name)
-          if (entry.isDirectory()) {
-            copyDir(srcPath, destPath)
-          } else {
-            copyFileSync(srcPath, destPath)
-          }
-        }
-      }
-      copyDir(resolve(__dirname, 'src/assets'), resolve(__dirname, 'dist/assets'))
-    }
-  }
-}
 
 export default defineConfig({
-  plugins: [vue(), copyAssets()],
+  plugins: [vue()],
   assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.webp'],
   build: {
     assetsInlineLimit: 0, // 禁止将资源转换为 base64
