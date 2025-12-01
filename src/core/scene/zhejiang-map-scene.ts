@@ -118,7 +118,11 @@ export class ZhejiangMapScene {
   private lastControlsTarget = new THREE.Vector3()
 
   private readonly loadingManager = new THREE.LoadingManager()
-  private readonly textureLoader = new THREE.TextureLoader(this.loadingManager)
+  private readonly textureLoader = (() => {
+    const loader = new THREE.TextureLoader(this.loadingManager)
+    loader.setCrossOrigin('anonymous')
+    return loader
+  })()
 
   private readonly rotatingPlanes: RotatingPlane[] = []
   private readonly pulsingHalos: PulsingHalo[] = []
