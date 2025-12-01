@@ -56,9 +56,10 @@ export function getAssetUrl(path: string): string {
 
   // 默认使用线上 CDN 地址
   // 根据路径类型选择对应的 CDN 路径
-  if (path.startsWith('textures/')) {
-    // textures 资源在 zhejiang 目录下
-    finalUrl = `${DEFAULT_CDN_BASE_URL}/zhejiang/${path}`
+  if (path.startsWith('textures/zhejiang/')) {
+    // textures/zhejiang 资源映射到 zhejiang 目录下，去掉 textures/zhejiang/ 前缀
+    const fileName = path.replace('textures/zhejiang/', '')
+    finalUrl = `${DEFAULT_CDN_BASE_URL}/zhejiang/${fileName}`
   } else {
     // images 等其他资源直接在根目录下
     finalUrl = `${DEFAULT_CDN_BASE_URL}/${path}`
