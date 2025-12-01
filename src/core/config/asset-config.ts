@@ -4,7 +4,7 @@
  */
 
 // 默认使用线上 CDN 地址
-const DEFAULT_CDN_BASE_PATH = 'https://dowload.20001220.com/zhejiang'
+const DEFAULT_CDN_BASE_URL = 'https://dowload.20001220.com'
 
 let customAssetsBasePath: string | null = null
 let debugMode = false
@@ -55,7 +55,14 @@ export function getAssetUrl(path: string): string {
   }
 
   // 默认使用线上 CDN 地址
-  finalUrl = `${DEFAULT_CDN_BASE_PATH}/${path}`
+  // 根据路径类型选择对应的 CDN 路径
+  if (path.startsWith('textures/')) {
+    // textures 资源在 zhejiang 目录下
+    finalUrl = `${DEFAULT_CDN_BASE_URL}/zhejiang/${path}`
+  } else {
+    // images 等其他资源直接在根目录下
+    finalUrl = `${DEFAULT_CDN_BASE_URL}/${path}`
+  }
 
   if (debugMode) {
     console.log(`[Vue3ChinaMap3D] 使用 CDN 地址: ${path} -> ${finalUrl}`)
