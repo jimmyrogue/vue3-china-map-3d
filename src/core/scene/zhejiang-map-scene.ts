@@ -53,6 +53,7 @@ export interface ZhejiangMapSceneOptions {
   hideCityLabel?: boolean
   hideDistrictLabel?: boolean
   controlLimits?: Partial<typeof CONTROL_LIMITS>
+  mapLayerConfig?: Partial<typeof MAP_LAYER_CONFIG>
 }
 
 export interface ZhejiangMapSceneMountOptions {
@@ -113,7 +114,7 @@ export class ZhejiangMapScene {
   // 🚀 性能优化：CSS3D 标签渲染优化标志
   private labelNeedsUpdate = true
   private readonly defaultCameraPosition = new THREE.Vector3(0, 100, 170)
-  private readonly defaultControlsTarget = new THREE.Vector3(0, -35, MAP_LAYER_CONFIG.offsetZ + 10)
+  private defaultControlsTarget!: THREE.Vector3
   // 🚀 性能优化：相机位置缓存，用于检测相机移动
   private lastCameraPosition = new THREE.Vector3()
   private lastControlsTarget = new THREE.Vector3()
@@ -167,6 +168,7 @@ export class ZhejiangMapScene {
   }
 
   private readonly controlLimits: typeof CONTROL_LIMITS
+  private readonly mapLayerConfig: typeof MAP_LAYER_CONFIG
 
   private readonly handleMouseDown = (event: MouseEvent): void => {
     // 记录鼠标按下时的位置和时间
@@ -223,6 +225,11 @@ export class ZhejiangMapScene {
       ...CONTROL_LIMITS,
       ...options.controlLimits,
     }
+    this.mapLayerConfig = {
+      ...MAP_LAYER_CONFIG,
+      ...options.mapLayerConfig,
+    }
+    this.defaultControlsTarget = new THREE.Vector3(0, -35, this.mapLayerConfig.offsetZ + 10)
     this.setupLoadingManager()
   }
 
@@ -462,7 +469,7 @@ export class ZhejiangMapScene {
 
     this.mapGroup = new THREE.Group()
     this.mapGroup.name = 'zhejiang-map-group'
-    this.mapGroup.position.set(0, MAP_LAYER_CONFIG.floatHeight, MAP_LAYER_CONFIG.offsetZ)
+    this.mapGroup.position.set(0, this.mapLayerConfig.floatHeight, this.mapLayerConfig.offsetZ)
 
     this.mapGeometryGroup = new THREE.Group()
     this.mapGeometryGroup.name = 'zhejiang-map-geometry'
@@ -732,7 +739,7 @@ export class ZhejiangMapScene {
       element.style.pointerEvents = 'auto'
 
       const sprite = new CSS3DSprite(element)
-      const defaultHeight = MAP_LAYER_CONFIG.extrusionDepth + 1.2
+      const defaultHeight = this.mapLayerConfig.extrusionDepth + 1.2
       sprite.position.set(x, config.height ?? defaultHeight, z)
       sprite.scale.setScalar(config.scale ?? 0.24)
 
@@ -1126,7 +1133,7 @@ export class ZhejiangMapScene {
 
     console.log(`[DistrictLabels] Feature count: ${features.length}`)
 
-    const labelHeight = MAP_LAYER_CONFIG.extrusionDepth + 3.4
+    const labelHeight = this.mapLayerConfig.extrusionDepth + 3.4
     const scaleFactor = THREE.MathUtils.clamp(transformer.normalizedScale, 0.76, 1.6)
     const districtData = this.cityDistrictData.get(cityName) ?? []
     const districtStats = this.computeDistrictStats(districtData)
@@ -1256,7 +1263,7 @@ export class ZhejiangMapScene {
     if (!lonLat)
       return
 
-    const labelHeight = MAP_LAYER_CONFIG.extrusionDepth + 3.4
+    const labelHeight = this.mapLayerConfig.extrusionDepth + 3.4
     const scaleFactor = THREE.MathUtils.clamp(transformer.normalizedScale, 0.76, 1.6)
     const districtData = this.cityDistrictData.get(cityName) ?? []
     const districtStats = this.computeDistrictStats(districtData)
@@ -1480,7 +1487,7 @@ export class ZhejiangMapScene {
 
   private animateToCityView(): void {
     const cityCameraPosition = new THREE.Vector3(0, 98, 116)
-    const cityTarget = new THREE.Vector3(0, -28, MAP_LAYER_CONFIG.offsetZ + 4)
+    const cityTarget = new THREE.Vector3(0, -28, this.mapLayerConfig.offsetZ + 4)
 
     this.applyControlLimits({
       minDistance: 32,
@@ -1494,7 +1501,7 @@ export class ZhejiangMapScene {
 
   private animateToDistrictView(transform?: GeoToSceneTransformerResult | null): void {
     const districtCameraPosition = new THREE.Vector3(0, 158, 320)
-    const districtTarget = new THREE.Vector3(0, -26, MAP_LAYER_CONFIG.offsetZ + 6)
+    const districtTarget = new THREE.Vector3(0, -26, this.mapLayerConfig.offsetZ + 6)
 
     if (transform) {
       const scale = THREE.MathUtils.clamp(transform.normalizedScale, 0.65, 2.8)

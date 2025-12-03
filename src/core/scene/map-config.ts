@@ -35,8 +35,16 @@ export const CONTROL_LIMITS: ControlLimits = {
   maxPolarAngle: Math.PI / 2.05,
 }
 
-export const MAP_LAYER_CONFIG = {
-  center: [120.153576, 29.287459] as [number, number],
+export interface MapLayerConfig {
+  center: [number, number]
+  scale: number
+  extrusionDepth: number
+  floatHeight: number
+  offsetZ: number
+}
+
+export const MAP_LAYER_CONFIG: MapLayerConfig = {
+  center: [120.153576, 29.287459],
   scale: 850,
   extrusionDepth: 5,
   floatHeight: -13.6,

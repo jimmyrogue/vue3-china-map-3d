@@ -97,6 +97,7 @@ function handleCityClick(city: any) {
 | `hideCityLabel` | `boolean` | `false` | 隐藏所有城市标记（包括光柱和标签） |
 | `hideDistrictLabel` | `boolean` | `false` | 隐藏所有区县标签 |
 | `controlLimits` | `Partial<ControlLimits>` | - | 相机控制限制配置（缩放距离、旋转角度等） |
+| `mapLayerConfig` | `Partial<MapLayerConfig>` | - | 地图层配置（中心点、缩放比例、高度等） |
 
 ### Events
 
@@ -126,6 +127,14 @@ interface ControlLimits {
   maxDistance: number     // 最大缩放距离，默认 250
   minPolarAngle: number   // 最小俯仰角（弧度），默认 Math.PI / 6
   maxPolarAngle: number   // 最大俯仰角（弧度），默认 Math.PI / 2.05
+}
+
+interface MapLayerConfig {
+  center: [number, number]  // 地图中心点 [经度, 纬度]，默认 [120.153576, 29.287459]
+  scale: number             // 地图缩放比例，默认 850
+  extrusionDepth: number    // 地图挤出深度（厚度），默认 5
+  floatHeight: number       // 地图浮动高度，默认 -13.6
+  offsetZ: number           // 地图 Z 轴偏移，默认 100
 }
 ```
 
@@ -475,6 +484,81 @@ const freeView: Partial<ControlLimits> = {
 - 角度使用弧度制，可以使用 `Math.PI` 进行计算
 - `minPolarAngle` 应小于 `maxPolarAngle`
 - `minDistance` 应小于 `maxDistance`
+
+## 🗺️ 地图层配置
+
+通过 `mapLayerConfig` 属性，你可以自定义地图的投影、缩放、高度等核心参数：
+
+```vue
+<template>
+  <Map3D
+    :map-layer-config="{
+      center: [120.2, 30.3],
+      scale: 1000,
+      extrusionDepth: 8,
+      floatHeight: -15,
+      offsetZ: 120
+    }"
+  />
+</template>
+
+<script setup lang="ts">
+import { Map3D } from 'vue3-china-map-3d'
+import type { MapLayerConfig } from 'vue3-china-map-3d'
+
+// 或者使用类型定义
+const customMapConfig: Partial<MapLayerConfig> = {
+  center: [120.2, 30.3],      // 地图中心点 [经度, 纬度]
+  scale: 1000,                // 地图缩放比例
+  extrusionDepth: 8,          // 地图挤出深度（厚度）
+  floatHeight: -15,           // 地图浮动高度
+  offsetZ: 120                // 地图 Z 轴偏移
+}
+</script>
+```
+
+**参数说明**:
+
+- `center`: 地图中心点坐标 `[经度, 纬度]`，默认 `[120.153576, 29.287459]`（浙江省中心）。调整此参数可以改变地图的投影中心
+- `scale`: 地图缩放比例，默认 `850`。值越大，地图显示越大
+- `extrusionDepth`: 地图挤出深度（厚度），默认 `5`。控制地图的 3D 厚度效果
+- `floatHeight`: 地图浮动高度，默认 `-13.6`。控制地图在 Y 轴上的位置
+- `offsetZ`: 地图 Z 轴偏移，默认 `100`。控制地图在 Z 轴上的位置
+
+**常用配置示例**:
+
+```typescript
+// 放大地图显示
+const zoomedIn: Partial<MapLayerConfig> = {
+  scale: 1200,
+  extrusionDepth: 8
+}
+
+// 更扁平的地图效果
+const flatMap: Partial<MapLayerConfig> = {
+  extrusionDepth: 2,
+  floatHeight: -10
+}
+
+// 调整地图位置（更靠近相机）
+const closerMap: Partial<MapLayerConfig> = {
+  offsetZ: 80,
+  floatHeight: -10
+}
+
+// 自定义投影中心（适配不同省份）
+const customCenter: Partial<MapLayerConfig> = {
+  center: [119.5, 29.8],  // 调整中心点
+  scale: 900
+}
+```
+
+**注意事项**:
+
+- 所有参数都是可选的，未指定的参数将使用默认值
+- 修改 `center` 和 `scale` 会影响地图的投影效果，需要根据实际地理数据调整
+- `extrusionDepth` 影响地图的 3D 厚度，过大可能影响视觉效果
+- `floatHeight` 和 `offsetZ` 影响地图在 3D 空间中的位置，需要与相机位置配合调整
 
 ## 🛠️ 本地开发
 
