@@ -52,6 +52,7 @@ export interface ZhejiangMapSceneOptions {
   customLabels?: CustomLabelConfig[]
   hideCityLabel?: boolean
   hideDistrictLabel?: boolean
+  controlLimits?: Partial<typeof CONTROL_LIMITS>
 }
 
 export interface ZhejiangMapSceneMountOptions {
@@ -165,6 +166,8 @@ export class ZhejiangMapScene {
     u_time: { value: 0.0 },
   }
 
+  private readonly controlLimits: typeof CONTROL_LIMITS
+
   private readonly handleMouseDown = (event: MouseEvent): void => {
     // 记录鼠标按下时的位置和时间
     this.mouseDownPosition = { x: event.clientX, y: event.clientY }
@@ -216,6 +219,10 @@ export class ZhejiangMapScene {
     console.log('[ZhejiangMapScene] Constructor - hideDistrictLabel:', this.options.hideDistrictLabel)
     console.log('[ZhejiangMapScene] Constructor - hideCityLabel:', this.options.hideCityLabel)
     this.customLabelConfigs = options.customLabels
+    this.controlLimits = {
+      ...CONTROL_LIMITS,
+      ...options.controlLimits,
+    }
     this.setupLoadingManager()
   }
 
@@ -392,10 +399,10 @@ export class ZhejiangMapScene {
     this.controls.enableDamping = true
     this.controls.dampingFactor = 0.04
     this.controls.enablePan = true
-    this.controls.minDistance = CONTROL_LIMITS.minDistance
-    this.controls.maxDistance = CONTROL_LIMITS.maxDistance
-    this.controls.minPolarAngle = CONTROL_LIMITS.minPolarAngle
-    this.controls.maxPolarAngle = CONTROL_LIMITS.maxPolarAngle
+    this.controls.minDistance = this.controlLimits.minDistance
+    this.controls.maxDistance = this.controlLimits.maxDistance
+    this.controls.minPolarAngle = this.controlLimits.minPolarAngle
+    this.controls.maxPolarAngle = this.controlLimits.maxPolarAngle
     this.controls.autoRotate = false
     this.controls.autoRotateSpeed = 0
     this.controls.target.copy(this.defaultControlsTarget)
@@ -1416,10 +1423,10 @@ export class ZhejiangMapScene {
     if (!this.controls)
       return
 
-    const minDistance = limits?.minDistance ?? CONTROL_LIMITS.minDistance
-    const maxDistance = limits?.maxDistance ?? CONTROL_LIMITS.maxDistance
-    const minPolar = limits?.minPolarAngle ?? CONTROL_LIMITS.minPolarAngle
-    const maxPolar = limits?.maxPolarAngle ?? CONTROL_LIMITS.maxPolarAngle
+    const minDistance = limits?.minDistance ?? this.controlLimits.minDistance
+    const maxDistance = limits?.maxDistance ?? this.controlLimits.maxDistance
+    const minPolar = limits?.minPolarAngle ?? this.controlLimits.minPolarAngle
+    const maxPolar = limits?.maxPolarAngle ?? this.controlLimits.maxPolarAngle
 
     this.controls.minDistance = minDistance
     this.controls.maxDistance = maxDistance

@@ -21,7 +21,14 @@ export type CityRiskDatum = CityBoardDatum & {
   center: [number, number]
 }
 
-export const CONTROL_LIMITS = {
+export interface ControlLimits {
+  minDistance: number
+  maxDistance: number
+  minPolarAngle: number
+  maxPolarAngle: number
+}
+
+export const CONTROL_LIMITS: ControlLimits = {
   minDistance: 68,
   maxDistance: 250,
   minPolarAngle: Math.PI / 6,

@@ -11,7 +11,7 @@ export { setAssetsBasePath, resetAssetsBasePath, setDebugMode } from './core/con
 // 导出类型
 export type { CityBoardDatum, CityDistrictDatum } from './core/zhejiangCityBoards'
 export type { ZhejiangMapSceneOptions, ZhejiangMapSceneMountOptions } from './core/scene/zhejiang-map-scene'
-export type { CityRiskDatum, MapBoundingBox } from './core/scene/map-config'
+export type { CityRiskDatum, MapBoundingBox, ControlLimits } from './core/scene/map-config'
 
 // Vue 插件安装
 export default {

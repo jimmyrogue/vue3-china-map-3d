@@ -96,6 +96,7 @@ function handleCityClick(city: any) {
 | `customLabels` | `CustomLabelConfig[]` | - | 完全自定义标签配置数组 |
 | `hideCityLabel` | `boolean` | `false` | 隐藏所有城市标记（包括光柱和标签） |
 | `hideDistrictLabel` | `boolean` | `false` | 隐藏所有区县标签 |
+| `controlLimits` | `Partial<ControlLimits>` | - | 相机控制限制配置（缩放距离、旋转角度等） |
 
 ### Events
 
@@ -118,6 +119,13 @@ interface CityBoardDatum {
 interface CityDistrictDatum {
   name: string   // 区县名称
   value?: number // 数值
+}
+
+interface ControlLimits {
+  minDistance: number     // 最小缩放距离，默认 68
+  maxDistance: number     // 最大缩放距离，默认 250
+  minPolarAngle: number   // 最小俯仰角（弧度），默认 Math.PI / 6
+  maxPolarAngle: number   // 最大俯仰角（弧度），默认 Math.PI / 2.05
 }
 ```
 
@@ -395,6 +403,78 @@ mapRef.value?.updateCustomLabels([...])
 - **按 ESC 键**: 返回上一级视图
 - **鼠标拖拽**: 旋转视角
 - **鼠标滚轮**: 缩放视图
+
+## 🎛️ 相机控制配置
+
+通过 `controlLimits` 属性，你可以自定义相机的缩放范围和旋转角度限制：
+
+```vue
+<template>
+  <Map3D
+    :control-limits="{
+      minDistance: 50,
+      maxDistance: 300,
+      minPolarAngle: Math.PI / 8,
+      maxPolarAngle: Math.PI / 2.2
+    }"
+  />
+</template>
+
+<script setup lang="ts">
+import { Map3D } from 'vue3-china-map-3d'
+import type { ControlLimits } from 'vue3-china-map-3d'
+
+// 或者使用类型定义
+const customLimits: Partial<ControlLimits> = {
+  minDistance: 50,    // 最小缩放距离（相机离地图最近的距离）
+  maxDistance: 300,   // 最大缩放距离（相机离地图最远的距离）
+  minPolarAngle: Math.PI / 8,    // 最小俯仰角（相机最高的角度）
+  maxPolarAngle: Math.PI / 2.2   // 最大俯仰角（相机最低的角度）
+}
+</script>
+```
+
+**参数说明**:
+
+- `minDistance`: 最小缩放距离，默认 `68`。值越小，相机可以离地图越近
+- `maxDistance`: 最大缩放距离，默认 `250`。值越大，相机可以离地图越远
+- `minPolarAngle`: 最小俯仰角（弧度），默认 `Math.PI / 6`（30°）。控制相机可以抬多高
+- `maxPolarAngle`: 最大俯仰角（弧度），默认 `Math.PI / 2.05`（约 88°）。控制相机可以压多低
+
+**常用配置示例**:
+
+```typescript
+// 限制更近的观察距离（适合查看细节）
+const closeView: Partial<ControlLimits> = {
+  minDistance: 30,
+  maxDistance: 150
+}
+
+// 限制更远的观察距离（适合全局视角）
+const farView: Partial<ControlLimits> = {
+  minDistance: 100,
+  maxDistance: 400
+}
+
+// 限制俯视角度（防止看到地图底部）
+const topDownView: Partial<ControlLimits> = {
+  minPolarAngle: Math.PI / 4,   // 45°
+  maxPolarAngle: Math.PI / 2.5  // 约 72°
+}
+
+// 允许更自由的视角
+const freeView: Partial<ControlLimits> = {
+  minPolarAngle: 0,             // 完全俯视
+  maxPolarAngle: Math.PI / 2    // 完全平视
+}
+```
+
+**注意事项**:
+
+- 所有参数都是可选的，未指定的参数将使用默认值
+- 角度使用弧度制，可以使用 `Math.PI` 进行计算
+- `minPolarAngle` 应小于 `maxPolarAngle`
+- `minDistance` 应小于 `maxDistance`
 
 ## 🛠️ 本地开发
 

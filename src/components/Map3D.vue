@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CityRiskDatum } from '../core/scene/map-config'
+import type { ControlLimits, CityRiskDatum } from '../core/scene/map-config'
 import type { CityBoardDatum, CityDistrictDatum } from '../core/zhejiangCityBoards'
 import type { CustomLabelConfig } from '../core/scene/zhejiang-map-scene'
 import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
@@ -12,6 +12,7 @@ const props = defineProps<{
   customLabels?: CustomLabelConfig[]
   hideCityLabel?: boolean
   hideDistrictLabel?: boolean
+  controlLimits?: Partial<ControlLimits>
 }>()
 
 const emit = defineEmits<{
@@ -69,6 +70,7 @@ function mountScene(initialData?: CityBoardDatum[] | CityRiskDatum[]) {
     customLabels: props.customLabels,
     hideCityLabel: props.hideCityLabel,
     hideDistrictLabel: props.hideDistrictLabel,
+    controlLimits: props.controlLimits,
   })
   mapScene.mount(mapContainerRef.value, {
     cityData: initialData ?? props.cityData,
