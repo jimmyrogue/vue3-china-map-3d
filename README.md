@@ -130,11 +130,13 @@ interface ControlLimits {
 }
 
 interface MapLayerConfig {
-  center: [number, number]  // 地图中心点 [经度, 纬度]，默认 [120.153576, 29.287459]
-  scale: number             // 地图缩放比例，默认 850
-  extrusionDepth: number    // 地图挤出深度（厚度），默认 5
-  floatHeight: number       // 地图浮动高度，默认 -13.6
-  offsetZ: number           // 地图 Z 轴偏移，默认 100
+  center: [number, number]              // 地图中心点 [经度, 纬度]，默认 [120.153576, 29.287459]
+  scale: number                         // 地图缩放比例，默认 850
+  extrusionDepth: number                // 地图挤出深度（厚度），默认 5
+  floatHeight: number                   // 地图浮动高度，默认 -13.6
+  offsetZ: number                       // 地图 Z 轴偏移，默认 100
+  defaultCameraPosition: [number, number, number]  // 初始相机位置 [x, y, z]，默认 [0, 100, 170]
+  defaultCameraTarget: [number, number, number]    // 初始相机目标点 [x, y, z]，默认 [0, -35, 110]
 }
 ```
 
@@ -524,6 +526,8 @@ const customMapConfig: Partial<MapLayerConfig> = {
 - `extrusionDepth`: 地图挤出深度（厚度），默认 `5`。控制地图的 3D 厚度效果
 - `floatHeight`: 地图浮动高度，默认 `-13.6`。控制地图在 Y 轴上的位置
 - `offsetZ`: 地图 Z 轴偏移，默认 `100`。控制地图在 Z 轴上的位置
+- `defaultCameraPosition`: 初始相机位置 `[x, y, z]`，默认 `[0, 100, 170]`。控制用户首次看到地图时的相机位置
+- `defaultCameraTarget`: 初始相机目标点 `[x, y, z]`，默认 `[0, -35, 110]`。控制相机看向的焦点位置
 
 **常用配置示例**:
 
@@ -551,6 +555,24 @@ const customCenter: Partial<MapLayerConfig> = {
   center: [119.5, 29.8],  // 调整中心点
   scale: 900
 }
+
+// 调整初始视角（更近的观察距离）
+const closeView: Partial<MapLayerConfig> = {
+  defaultCameraPosition: [0, 80, 120],   // 相机更靠近地图
+  defaultCameraTarget: [0, -30, 100]     // 焦点也相应调整
+}
+
+// 调整初始视角（俯视角度）
+const topView: Partial<MapLayerConfig> = {
+  defaultCameraPosition: [0, 150, 100],  // 相机更高，更靠前
+  defaultCameraTarget: [0, -20, 100]     // 焦点向上
+}
+
+// 调整初始视角（侧视角度）
+const sideView: Partial<MapLayerConfig> = {
+  defaultCameraPosition: [100, 100, 150], // 相机偏向一侧
+  defaultCameraTarget: [0, -35, 110]      // 保持焦点不变
+}
 ```
 
 **注意事项**:
@@ -559,6 +581,9 @@ const customCenter: Partial<MapLayerConfig> = {
 - 修改 `center` 和 `scale` 会影响地图的投影效果，需要根据实际地理数据调整
 - `extrusionDepth` 影响地图的 3D 厚度，过大可能影响视觉效果
 - `floatHeight` 和 `offsetZ` 影响地图在 3D 空间中的位置，需要与相机位置配合调整
+- `defaultCameraPosition` 和 `defaultCameraTarget` 控制初始视角，调整时需要配合使用以获得理想的观察效果
+- 相机位置的 Y 值越大，视角越高；Z 值越大，相机离地图越远
+- 建议先调整 `defaultCameraPosition`，再根据效果微调 `defaultCameraTarget` 以获得最佳视角
 
 ## 🛠️ 本地开发
 

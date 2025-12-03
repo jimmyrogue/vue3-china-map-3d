@@ -113,7 +113,7 @@ export class ZhejiangMapScene {
   private isTransitioning = false
   // 🚀 性能优化：CSS3D 标签渲染优化标志
   private labelNeedsUpdate = true
-  private readonly defaultCameraPosition = new THREE.Vector3(0, 100, 170)
+  private defaultCameraPosition!: THREE.Vector3
   private defaultControlsTarget!: THREE.Vector3
   // 🚀 性能优化：相机位置缓存，用于检测相机移动
   private lastCameraPosition = new THREE.Vector3()
@@ -229,7 +229,16 @@ export class ZhejiangMapScene {
       ...MAP_LAYER_CONFIG,
       ...options.mapLayerConfig,
     }
-    this.defaultControlsTarget = new THREE.Vector3(0, -35, this.mapLayerConfig.offsetZ + 10)
+    this.defaultCameraPosition = new THREE.Vector3(
+      this.mapLayerConfig.defaultCameraPosition[0],
+      this.mapLayerConfig.defaultCameraPosition[1],
+      this.mapLayerConfig.defaultCameraPosition[2],
+    )
+    this.defaultControlsTarget = new THREE.Vector3(
+      this.mapLayerConfig.defaultCameraTarget[0],
+      this.mapLayerConfig.defaultCameraTarget[1],
+      this.mapLayerConfig.defaultCameraTarget[2],
+    )
     this.setupLoadingManager()
   }
 

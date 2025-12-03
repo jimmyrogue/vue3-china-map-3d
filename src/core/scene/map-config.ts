@@ -41,6 +41,8 @@ export interface MapLayerConfig {
   extrusionDepth: number
   floatHeight: number
   offsetZ: number
+  defaultCameraPosition: [number, number, number]
+  defaultCameraTarget: [number, number, number]
 }
 
 export const MAP_LAYER_CONFIG: MapLayerConfig = {
@@ -49,6 +51,8 @@ export const MAP_LAYER_CONFIG: MapLayerConfig = {
   extrusionDepth: 5,
   floatHeight: -13.6,
   offsetZ: 100,
+  defaultCameraPosition: [0, 100, 170],
+  defaultCameraTarget: [0, -35, 110],
 }
 
 export const CITY_MARKER_SCALE = 0.17
