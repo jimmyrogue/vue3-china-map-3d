@@ -45,6 +45,10 @@ export interface MapLayerConfig {
   defaultCameraTarget: [number, number, number]
 }
 
+export interface LevelLimitConfig {
+  maxLevel: 'province' | 'city' | 'district'
+}
+
 export const MAP_LAYER_CONFIG: MapLayerConfig = {
   center: [120.153576, 29.287459],
   scale: 850,

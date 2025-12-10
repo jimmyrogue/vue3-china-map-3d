@@ -54,6 +54,7 @@ export interface ZhejiangMapSceneOptions {
   hideDistrictLabel?: boolean
   controlLimits?: Partial<typeof CONTROL_LIMITS>
   mapLayerConfig?: Partial<typeof MAP_LAYER_CONFIG>
+  levelLimit?: Partial<{ maxLevel: 'province' | 'city' | 'district' }>
 }
 
 export interface ZhejiangMapSceneMountOptions {
@@ -169,6 +170,7 @@ export class ZhejiangMapScene {
 
   private readonly controlLimits: typeof CONTROL_LIMITS
   private readonly mapLayerConfig: typeof MAP_LAYER_CONFIG
+  private readonly maxLevel: 'province' | 'city' | 'district'
 
   private readonly handleMouseDown = (event: MouseEvent): void => {
     // 记录鼠标按下时的位置和时间
@@ -196,6 +198,12 @@ export class ZhejiangMapScene {
 
     const userData = targetMesh.userData as CityMeshMetadata
     if (!userData?.cityName || userData.isClickable === false)
+      return
+
+    // 层级限制检查
+    if (this.currentLevel === 'province' && this.maxLevel === 'province')
+      return
+    if (this.currentLevel === 'city' && this.maxLevel === 'city')
       return
 
     if (this.currentLevel === 'province')
@@ -229,6 +237,7 @@ export class ZhejiangMapScene {
       ...MAP_LAYER_CONFIG,
       ...options.mapLayerConfig,
     }
+    this.maxLevel = options.levelLimit?.maxLevel ?? 'district'
     this.defaultCameraPosition = new THREE.Vector3(
       this.mapLayerConfig.defaultCameraPosition[0],
       this.mapLayerConfig.defaultCameraPosition[1],
@@ -945,6 +954,12 @@ export class ZhejiangMapScene {
     if (!cityName || !this.mapGeometryGroup || this.isTransitioning)
       return
 
+    // 层级限制检查
+    if (this.maxLevel === 'province') {
+      console.warn('[Map3D] Cannot enter city level: maxLevel is set to "province"')
+      return
+    }
+
     this.isTransitioning = true
     try {
       const geo = await this.getCityGeo(cityName)
@@ -1029,6 +1044,12 @@ export class ZhejiangMapScene {
 
     if (this.isTransitioning)
       return
+
+    // 层级限制检查
+    if (this.maxLevel === 'province' || this.maxLevel === 'city') {
+      console.warn(`[Map3D] Cannot enter district level: maxLevel is set to "${this.maxLevel}"`)
+      return
+    }
 
     if (this.currentLevel === 'province' || this.currentCityName !== cityName) {
       await this.focusCity(cityName)

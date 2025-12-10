@@ -94,10 +94,11 @@ function handleCityClick(city: any) {
 | `cityLabelRenderer` | `(city, normalized) => HTMLElement \| null \| false` | - | 自定义城市标签渲染函数 |
 | `districtLabelRenderer` | `(name, options) => HTMLElement \| null \| false` | - | 自定义区县标签渲染函数 |
 | `customLabels` | `CustomLabelConfig[]` | - | 完全自定义标签配置数组 |
-| `hideCityLabel` | `boolean` | `false` | 隐藏所有城市标记（包括光柱和标签） |
+| `hideCityLabel` | `boolean` | `false` | 隐藏所有城市标记(包括光柱和标签) |
 | `hideDistrictLabel` | `boolean` | `false` | 隐藏所有区县标签 |
-| `controlLimits` | `Partial<ControlLimits>` | - | 相机控制限制配置（缩放距离、旋转角度等） |
-| `mapLayerConfig` | `Partial<MapLayerConfig>` | - | 地图层配置（中心点、缩放比例、高度等） |
+| `controlLimits` | `Partial<ControlLimits>` | - | 相机控制限制配置(缩放距离、旋转角度等) |
+| `mapLayerConfig` | `Partial<MapLayerConfig>` | - | 地图层配置(中心点、缩放比例、高度等) |
+| `levelLimit` | `Partial<LevelLimitConfig>` | - | 地图层级限制配置(控制可进入的最大层级) |
 
 ### Events
 
@@ -137,6 +138,10 @@ interface MapLayerConfig {
   offsetZ: number                       // 地图 Z 轴偏移，默认 100
   defaultCameraPosition: [number, number, number]  // 初始相机位置 [x, y, z]，默认 [0, 100, 170]
   defaultCameraTarget: [number, number, number]    // 初始相机目标点 [x, y, z]，默认 [0, -35, 110]
+}
+
+interface LevelLimitConfig {
+  maxLevel: 'province' | 'city' | 'district'  // 可进入的最大层级，默认 'district'（无限制）
 }
 ```
 
@@ -584,6 +589,192 @@ const sideView: Partial<MapLayerConfig> = {
 - `defaultCameraPosition` 和 `defaultCameraTarget` 控制初始视角，调整时需要配合使用以获得理想的观察效果
 - 相机位置的 Y 值越大，视角越高；Z 值越大，相机离地图越远
 - 建议先调整 `defaultCameraPosition`，再根据效果微调 `defaultCameraTarget` 以获得最佳视角
+
+## 🔒 地图层级限制
+
+通过 `levelLimit` 属性，你可以控制地图允许进入的最大层级深度，适用于只需要展示省级或市级数据的场景。
+
+### 基本用法
+
+```vue
+<template>
+  <!-- 默认：无限制，支持省→市→区三级钻取 -->
+  <Map3D :city-data="cityData" />
+
+  <!-- 限制只能进入市级，不能再进入区县 -->
+  <Map3D
+    :city-data="cityData"
+    :level-limit="{ maxLevel: 'city' }"
+  />
+
+  <!-- 限制只能查看省级，禁止任何层级下钻 -->
+  <Map3D
+    :city-data="cityData"
+    :level-limit="{ maxLevel: 'province' }"
+  />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { Map3D } from 'vue3-china-map-3d'
+import type { CityBoardDatum, LevelLimitConfig } from 'vue3-china-map-3d'
+
+const cityData = ref<CityBoardDatum[]>([
+  {
+    name: '杭州市',
+    value: 120,
+    center: [120.153576, 30.287459],
+    districts: [
+      { name: '西湖区', value: 45 },
+      { name: '滨江区', value: 38 }
+    ]
+  },
+  {
+    name: '宁波市',
+    value: 95,
+    center: [121.549792, 29.868388]
+  }
+])
+</script>
+```
+
+### 配置说明
+
+```typescript
+interface LevelLimitConfig {
+  maxLevel: 'province' | 'city' | 'district'
+}
+```
+
+**maxLevel 参数说明**:
+
+| 值 | 说明 | 交互行为 |
+|---|------|---------|
+| `'district'` | 默认，无限制 | 支持省→市→区三级完整钻取 |
+| `'city'` | 限制到市级 | ✅ 省级可进入市级<br>❌ 市级内点击区县无响应<br>❌ 调用 `focusDistrict()` 被拦截 |
+| `'province'` | 限制到省级 | ❌ 省级内点击城市无响应<br>❌ 城市标签点击无响应<br>❌ 调用 `focusCity()` 被拦截 |
+
+### 完整示例
+
+```vue
+<template>
+  <div style="width: 100vw; height: 100vh;">
+    <div style="position: absolute; top: 20px; left: 20px; z-index: 10;">
+      <label>
+        层级限制:
+        <select v-model="selectedMaxLevel">
+          <option value="district">无限制（省→市→区）</option>
+          <option value="city">限制到市级</option>
+          <option value="province">限制到省级</option>
+        </select>
+      </label>
+    </div>
+
+    <Map3D
+      :city-data="cityData"
+      :level-limit="{ maxLevel: selectedMaxLevel }"
+      @level-change="handleLevelChange"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { Map3D } from 'vue3-china-map-3d'
+import type { CityBoardDatum } from 'vue3-china-map-3d'
+
+const selectedMaxLevel = ref<'province' | 'city' | 'district'>('city')
+
+const cityData = ref<CityBoardDatum[]>([
+  {
+    name: '杭州市',
+    value: 120,
+    center: [120.153576, 30.287459],
+    districts: [
+      { name: '西湖区', value: 45 },
+      { name: '滨江区', value: 38 },
+      { name: '拱墅区', value: 32 }
+    ]
+  },
+  {
+    name: '宁波市',
+    value: 95,
+    center: [121.549792, 29.868388],
+    districts: [
+      { name: '海曙区', value: 28 },
+      { name: '江北区', value: 22 }
+    ]
+  }
+])
+
+function handleLevelChange(
+  level: 'province' | 'city' | 'district',
+  cityName: string | null,
+  districtName: string | null
+) {
+  console.log(`当前层级: ${level}`)
+  if (cityName)
+    console.log(`城市: ${cityName}`)
+  if (districtName)
+    console.log(`区县: ${districtName}`)
+}
+</script>
+```
+
+### 使用场景
+
+**1. 业务数据只到市级**
+```vue
+<template>
+  <!-- 数据库只有省市两级数据，无区县数据 -->
+  <Map3D
+    :city-data="citiesWithoutDistricts"
+    :level-limit="{ maxLevel: 'city' }"
+  />
+</template>
+```
+
+**2. 大屏展示限制交互**
+```vue
+<template>
+  <!-- 大屏只展示省级概览，禁止用户交互钻取 -->
+  <Map3D
+    :city-data="cityData"
+    :level-limit="{ maxLevel: 'province' }"
+  />
+</template>
+```
+
+**3. 权限控制**
+```vue
+<template>
+  <!-- 根据用户权限动态控制可访问的层级 -->
+  <Map3D
+    :city-data="cityData"
+    :level-limit="{ maxLevel: userMaxLevel }"
+  />
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+
+// 根据用户角色计算最大层级
+const userMaxLevel = computed(() => {
+  if (userRole.value === 'admin')
+    return 'district'  // 管理员可查看所有层级
+  if (userRole.value === 'manager')
+    return 'city'      // 经理只能查看到市级
+  return 'province'    // 普通用户只能查看省级
+})
+</script>
+```
+
+### 注意事项
+
+- 层级限制不影响 `focusProvince()` 返回上一级的功能
+- 当达到限制层级时，点击操作会被静默拦截，控制台会输出警告信息
+- 程序式调用 `focusCity()` 或 `focusDistrict()` 时也会受到限制
+- 未配置 `levelLimit` 时，默认 `maxLevel: 'district'`，即无任何限制
 
 ## 🛠️ 本地开发
 
