@@ -18,6 +18,7 @@ export interface MapGeometryContext {
   cityMeshes: THREE.Mesh[]
   cityMeshGroups?: Map<string, THREE.Mesh[]>
   tryLoadTexture: (url: string) => THREE.Texture | null
+  extrusionDepth?: number
   geoJson: FeatureCollection
   mode?: MapGeometryMode
   targetSize?: {
@@ -118,6 +119,7 @@ export function buildMapGeometry(context: MapGeometryContext): GeoToSceneTransfo
     cityMeshes,
     cityMeshGroups,
     tryLoadTexture,
+    extrusionDepth = MAP_LAYER_CONFIG.extrusionDepth,
     geoJson,
     mode = 'absolute',
     targetSize,
@@ -165,7 +167,7 @@ export function buildMapGeometry(context: MapGeometryContext): GeoToSceneTransfo
     shader.uniforms.u_edgeTopColor = { value: MAP_EDGE_GRADIENT.top }
     shader.uniforms.u_edgeMidColor = { value: MAP_EDGE_GRADIENT.middle }
     shader.uniforms.u_edgeBottomColor = { value: MAP_EDGE_GRADIENT.bottom }
-    shader.uniforms.u_edgeHeight = { value: MAP_LAYER_CONFIG.extrusionDepth }
+    shader.uniforms.u_edgeHeight = { value: extrusionDepth }
 
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying float vEdgeZ;')
@@ -276,7 +278,7 @@ vec4 diffuseColor = vec4(edgeColor, opacity);
         shape.closePath()
 
         const extrudeSettings = {
-          depth: MAP_LAYER_CONFIG.extrusionDepth,
+        depth: extrusionDepth,
           bevelEnabled: false,
         }
 
@@ -308,7 +310,7 @@ vec4 diffuseColor = vec4(edgeColor, opacity);
         }
 
         const edgesGeometry = new THREE.EdgesGeometry(geometry, 15)
-        const topEdges = filterTopEdges(edgesGeometry, MAP_LAYER_CONFIG.extrusionDepth)
+        const topEdges = filterTopEdges(edgesGeometry, extrusionDepth)
 
         const glowLineMaterial = new THREE.LineBasicMaterial({
           color: 0xD6EFFF,

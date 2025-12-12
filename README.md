@@ -820,7 +820,6 @@ const cityData = ref<CityBoardDatum[]>([
 
 ```typescript
 interface CityLabelConfig {
-  offsetY: number  // 城市标签Y轴偏移高度，默认 13.5
   scale: number    // 城市标签缩放比例，默认 0.24
 }
 ```
@@ -829,8 +828,9 @@ interface CityLabelConfig {
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `offsetY` | `number` | `13.5` | 标签在Y轴上的偏移高度，控制标签距离光柱顶部的距离 |
 | `scale` | `number` | `0.24` | 标签的缩放比例，控制标签的大小 |
+
+> 标签高度现由 `mapLayerConfig.extrusionDepth` 控制，`offsetY` 已移除。
 
 ### 使用场景
 

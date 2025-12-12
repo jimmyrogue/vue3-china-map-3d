@@ -31,6 +31,7 @@ export interface MarkerLayerContext {
   cityLabelRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement
   hideCityLabel?: boolean
   cityLabelConfig?: Partial<CityLabelConfig>
+  extrusionDepth?: number
 }
 
 // 🚀 性能优化：共享几何体实例，减少内存占用
@@ -43,7 +44,14 @@ const sharedGeometries = {
 }
 
 export function buildCityMarkers(context: MarkerLayerContext): void {
-  const { mapGroup, waveMeshArr, cityMarkerGroups, cityMarkerGroupsOptimized, cityData } = context
+  const {
+    mapGroup,
+    waveMeshArr,
+    cityMarkerGroups,
+    cityMarkerGroupsOptimized,
+    cityData,
+    extrusionDepth = MAP_LAYER_CONFIG.extrusionDepth,
+  } = context
 
   console.log('[CityMarkers] hideCityLabel:', context.hideCityLabel)
   console.log('[CityMarkers] cityData length:', cityData.length)
@@ -60,6 +68,8 @@ export function buildCityMarkers(context: MarkerLayerContext): void {
     ...DEFAULT_CITY_LABEL_CONFIG,
     ...context.cityLabelConfig,
   }
+
+  const labelOffsetY = 13.5
 
   const projection = createMapProjection()
 
@@ -84,7 +94,7 @@ export function buildCityMarkers(context: MarkerLayerContext): void {
 
     const label = createCityLabelSprite(city, normalized, context.cityLabelRenderer)
     if (label) {
-      label.position.set(0, labelConfig.offsetY, 0)
+      label.position.set(0, labelOffsetY, 0)
       label.scale.setScalar(labelConfig.scale)
       const labelElement = label.element as HTMLElement
       const clickHandler = (event: MouseEvent): void => {
@@ -105,7 +115,7 @@ export function buildCityMarkers(context: MarkerLayerContext): void {
       context.onLabelCreated?.({ city, label })
     }
 
-    cityGroup.position.set(x, MAP_LAYER_CONFIG.extrusionDepth + 1.2, y)
+    cityGroup.position.set(x, extrusionDepth + 1.2, y)
     cityGroup.userData = {
       baseY: cityGroup.position.y,
       phase: Math.random() * Math.PI * 2,

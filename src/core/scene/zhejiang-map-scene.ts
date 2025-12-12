@@ -318,6 +318,10 @@ export class ZhejiangMapScene {
 
     if (this.currentLevel === 'province')
       this.refreshCityMarkers()
+    else if (this.currentLevel === 'city')
+      this.refreshDistrictLabelsForCurrentCity()
+    else if (this.currentLevel === 'district')
+      this.refreshFocusedDistrictLabel()
   }
 
   private setupLoadingManager(): void {
@@ -595,6 +599,7 @@ export class ZhejiangMapScene {
         cityMeshes: this.provinceCityMeshesCache,
         cityMeshGroups: this.provinceCityMeshGroupsCache,
         tryLoadTexture: this.tryLoadTexture,
+        extrusionDepth: this.mapLayerConfig.extrusionDepth,
         geoJson: this.provinceGeo,
         mode: 'absolute',
       })
@@ -641,6 +646,7 @@ export class ZhejiangMapScene {
       cityLabelRenderer: this.options.cityLabelRenderer,
       hideCityLabel: this.options.hideCityLabel,
       cityLabelConfig: this.options.cityLabelConfig,
+      extrusionDepth: this.mapLayerConfig.extrusionDepth,
     })
 
     // 🚀 性能优化：标签创建后需要渲染
@@ -1009,6 +1015,7 @@ export class ZhejiangMapScene {
         cityMeshes,
         cityMeshGroups,
         tryLoadTexture: this.tryLoadTexture,
+        extrusionDepth: this.mapLayerConfig.extrusionDepth,
         geoJson: geo,
         mode: 'centered',
         targetSize: {
@@ -1116,6 +1123,7 @@ export class ZhejiangMapScene {
         cityMeshes: districtMeshes,
         cityMeshGroups: districtMeshGroups,
         tryLoadTexture: this.tryLoadTexture,
+        extrusionDepth: this.mapLayerConfig.extrusionDepth,
         geoJson: districtGeo,
         mode: 'centered',
         targetSize: {
@@ -1185,7 +1193,7 @@ export class ZhejiangMapScene {
 
     console.log(`[DistrictLabels] Feature count: ${features.length}`)
 
-    const labelHeight = this.mapLayerConfig.extrusionDepth + 3.4
+    const labelHeight = this.computeDistrictLabelHeight()
     const scaleFactor = THREE.MathUtils.clamp(transformer.normalizedScale, 0.76, 1.6)
     const districtData = this.cityDistrictData.get(cityName) ?? []
     const districtStats = this.computeDistrictStats(districtData)
@@ -1235,6 +1243,10 @@ export class ZhejiangMapScene {
 
     // 🚀 性能优化：标签创建后需要渲染
     this.labelNeedsUpdate = true
+  }
+
+  private computeDistrictLabelHeight(): number {
+    return this.mapLayerConfig.extrusionDepth + 3.4
   }
 
   private createDistrictLabelSprite(
@@ -1315,7 +1327,7 @@ export class ZhejiangMapScene {
     if (!lonLat)
       return
 
-    const labelHeight = this.mapLayerConfig.extrusionDepth + 3.4
+    const labelHeight = this.computeDistrictLabelHeight()
     const scaleFactor = THREE.MathUtils.clamp(transformer.normalizedScale, 0.76, 1.6)
     const districtData = this.cityDistrictData.get(cityName) ?? []
     const districtStats = this.computeDistrictStats(districtData)
@@ -1347,6 +1359,35 @@ export class ZhejiangMapScene {
 
     // 🚀 性能优化：标签创建后需要渲染
     this.labelNeedsUpdate = true
+  }
+
+  private refreshFocusedDistrictLabel(): void {
+    if (this.currentLevel !== 'district')
+      return
+
+    if (!this.currentCityGeo || !this.currentCityName || !this.currentDistrictName || !this._currentDistrictTransformer)
+      return
+
+    const features = this.currentCityGeo.features ?? []
+    const targetFeature = features.find((feature) => {
+      const properties = feature.properties as { name?: string } | undefined
+      return properties?.name === this.currentDistrictName
+    })
+
+    if (!targetFeature)
+      return
+
+    const districtGeo: FeatureCollection = {
+      type: 'FeatureCollection',
+      features: [JSON.parse(JSON.stringify(targetFeature)) as Feature],
+    }
+
+    this.buildFocusedDistrictLabel(
+      districtGeo,
+      this._currentDistrictTransformer,
+      this.currentCityName,
+      this.currentDistrictName,
+    )
   }
 
   private bindDistrictLabelInteraction(
@@ -1594,6 +1635,7 @@ export class ZhejiangMapScene {
     const userData = mesh.userData as CityMeshMetadata
     const groupKey = userData.cityName ?? `__mesh_${mesh.id}`
     const hoveredRegionName = userData.cityName ?? null
+    const hoverLift = this.computeHoverLift()
 
     const isInteractiveLevel = this.currentLevel === 'province' || this.currentLevel === 'city'
     if (!isInteractiveLevel || userData.isClickable === false) {
@@ -1627,7 +1669,7 @@ export class ZhejiangMapScene {
       // 🚀 性能优化：避免动画冲突，先停止之前的动画
       gsap.killTweensOf(targetMesh.position)
       gsap.to(targetMesh.position, {
-        y: metadata.originalY + 8,
+        y: metadata.originalY + hoverLift,
         duration: 0.5,
         ease: 'power2.out',
       })
@@ -1666,6 +1708,12 @@ export class ZhejiangMapScene {
     this.currentHoveredMeshes = []
     this.currentHoveredKey = null
     this.currentHoveredLabelName = null
+  }
+
+  private computeHoverLift(): number {
+    // Keep default behavior (≈8) while allowing extrusionDepth to scale hover height
+    const lift = this.mapLayerConfig.extrusionDepth * 1.6
+    return Math.max(1, lift)
   }
 
   private animateRegionLabelHover(name: string | null, isHovering: boolean): void {
