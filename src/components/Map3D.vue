@@ -163,6 +163,22 @@ watch(
   },
 )
 
+watch(
+  () => props.cityLabelConfig,
+  (next) => {
+    mapScene?.updateCityLabelConfig(next)
+  },
+  { deep: true },
+)
+
+watch(
+  () => props.controlLimits,
+  (next) => {
+    mapScene?.updateControlLimits(next)
+  },
+  { deep: true },
+)
+
 defineExpose({
   updateCityData,
   updateCustomLabels,

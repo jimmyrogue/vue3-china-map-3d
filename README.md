@@ -463,6 +463,8 @@ const customLimits: Partial<ControlLimits> = {
 - `minPolarAngle`: 最小俯仰角（弧度），默认 `Math.PI / 6`（30°）。控制相机可以抬多高
 - `maxPolarAngle`: 最大俯仰角（弧度），默认 `Math.PI / 2.05`（约 88°）。控制相机可以压多低
 
+> **注意**: 配置会在所有视图级别生效。当切换到城市或区县视图时，`maxDistance` 会取你的配置和视图默认值中的较大值，确保有足够的缩放空间。
+
 **常用配置示例**:
 
 ```typescript

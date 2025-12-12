@@ -1,7 +1,7 @@
 import type { Feature, FeatureCollection } from 'geojson'
 import type { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import type { CityBoardDatum, CityDistrictDatum } from '../zhejiangCityBoards'
-import type { CityLabelConfig, CityRiskDatum } from './map-config'
+import type { CityLabelConfig, CityRiskDatum, ControlLimits } from './map-config'
 import type { GeoToSceneTransformerResult } from './map-geometry'
 import type { PulsingHalo, RotatingPlane, WaterRipple, WaveMesh } from './types'
 import zhejiangGeo from '@/assets/geo/zhejiang.json'
@@ -298,6 +298,26 @@ export class ZhejiangMapScene {
       this.refreshCityMarkers()
     else if (this.currentLevel === 'city')
       this.refreshDistrictLabelsForCurrentCity()
+  }
+
+  public updateControlLimits(limits?: Partial<ControlLimits>): void {
+    if (!limits)
+      return
+
+    this.options.controlLimits = limits
+    this.controlLimits.minDistance = limits.minDistance ?? this.controlLimits.minDistance
+    this.controlLimits.maxDistance = limits.maxDistance ?? this.controlLimits.maxDistance
+    this.controlLimits.minPolarAngle = limits.minPolarAngle ?? this.controlLimits.minPolarAngle
+    this.controlLimits.maxPolarAngle = limits.maxPolarAngle ?? this.controlLimits.maxPolarAngle
+
+    this.applyControlLimits()
+  }
+
+  public updateCityLabelConfig(config?: Partial<CityLabelConfig>): void {
+    this.options.cityLabelConfig = config
+
+    if (this.currentLevel === 'province')
+      this.refreshCityMarkers()
   }
 
   private setupLoadingManager(): void {
@@ -1521,9 +1541,10 @@ export class ZhejiangMapScene {
     const cityCameraPosition = new THREE.Vector3(0, 98, 116)
     const cityTarget = new THREE.Vector3(0, -28, this.mapLayerConfig.offsetZ + 4)
 
+    // Use user-provided controlLimits if available, otherwise use defaults
     this.applyControlLimits({
-      minDistance: 32,
-      maxDistance: 150,
+      minDistance: this.controlLimits.minDistance,
+      maxDistance: Math.max(this.controlLimits.maxDistance, 150),
       minPolarAngle: Math.PI / 5,
       maxPolarAngle: Math.PI / 1.8,
     })
@@ -1542,9 +1563,10 @@ export class ZhejiangMapScene {
       districtCameraPosition.z = THREE.MathUtils.clamp(districtCameraPosition.z, 152, 320)
     }
 
+    // Use user-provided controlLimits if available, otherwise use defaults
     this.applyControlLimits({
-      minDistance: 42,
-      maxDistance: 320,
+      minDistance: this.controlLimits.minDistance,
+      maxDistance: Math.max(this.controlLimits.maxDistance, 320),
       minPolarAngle: Math.PI / 6,
       maxPolarAngle: Math.PI / 1.82,
     })
