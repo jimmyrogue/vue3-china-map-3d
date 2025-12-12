@@ -1,7 +1,7 @@
 import type { Feature, FeatureCollection } from 'geojson'
 import type { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import type { CityBoardDatum, CityDistrictDatum } from '../zhejiangCityBoards'
-import type { CityRiskDatum } from './map-config'
+import type { CityLabelConfig, CityRiskDatum } from './map-config'
 import type { GeoToSceneTransformerResult } from './map-geometry'
 import type { PulsingHalo, RotatingPlane, WaterRipple, WaveMesh } from './types'
 import zhejiangGeo from '@/assets/geo/zhejiang.json'
@@ -55,6 +55,7 @@ export interface ZhejiangMapSceneOptions {
   controlLimits?: Partial<typeof CONTROL_LIMITS>
   mapLayerConfig?: Partial<typeof MAP_LAYER_CONFIG>
   levelLimit?: Partial<{ maxLevel: 'province' | 'city' | 'district' }>
+  cityLabelConfig?: Partial<CityLabelConfig>
 }
 
 export interface ZhejiangMapSceneMountOptions {
@@ -619,6 +620,7 @@ export class ZhejiangMapScene {
       },
       cityLabelRenderer: this.options.cityLabelRenderer,
       hideCityLabel: this.options.hideCityLabel,
+      cityLabelConfig: this.options.cityLabelConfig,
     })
 
     // 🚀 性能优化：标签创建后需要渲染

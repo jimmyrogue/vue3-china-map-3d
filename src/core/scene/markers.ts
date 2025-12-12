@@ -1,10 +1,11 @@
-import type { CityRiskDatum } from './map-config'
+import type { CityRiskDatum, CityLabelConfig } from './map-config'
 import type { WaveMesh } from './types'
 import * as THREE from 'three'
 import { CSS3DSprite } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
 import {
   CITY_MARKER_SCALE,
   createMapProjection,
+  DEFAULT_CITY_LABEL_CONFIG,
   MAP_LAYER_CONFIG,
 } from './map-config'
 import './markers.css'
@@ -29,10 +30,8 @@ export interface MarkerLayerContext {
   onLabelCreated?: (payload: { city: CityRiskDatum, label: CSS3DSprite }) => void
   cityLabelRenderer?: (city: CityRiskDatum, normalized: number) => HTMLElement
   hideCityLabel?: boolean
+  cityLabelConfig?: Partial<CityLabelConfig>
 }
-
-const LABEL_OFFSET_Y = 13.5
-const LABEL_SCALE = 0.24
 
 // 🚀 性能优化：共享几何体实例，减少内存占用
 const sharedGeometries = {
@@ -55,6 +54,12 @@ export function buildCityMarkers(context: MarkerLayerContext): void {
   }
 
   console.log(`[CityMarkers] Building city markers, cityLabelRenderer: ${context.cityLabelRenderer ? 'CUSTOM' : 'DEFAULT'}`)
+
+  // 合并配置
+  const labelConfig = {
+    ...DEFAULT_CITY_LABEL_CONFIG,
+    ...context.cityLabelConfig,
+  }
 
   const projection = createMapProjection()
 
@@ -79,8 +84,8 @@ export function buildCityMarkers(context: MarkerLayerContext): void {
 
     const label = createCityLabelSprite(city, normalized, context.cityLabelRenderer)
     if (label) {
-      label.position.set(0, LABEL_OFFSET_Y, 0)
-      label.scale.setScalar(LABEL_SCALE)
+      label.position.set(0, labelConfig.offsetY, 0)
+      label.scale.setScalar(labelConfig.scale)
       const labelElement = label.element as HTMLElement
       const clickHandler = (event: MouseEvent): void => {
         event.stopPropagation()

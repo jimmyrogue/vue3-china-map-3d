@@ -99,6 +99,7 @@ function handleCityClick(city: any) {
 | `controlLimits` | `Partial<ControlLimits>` | - | 相机控制限制配置(缩放距离、旋转角度等) |
 | `mapLayerConfig` | `Partial<MapLayerConfig>` | - | 地图层配置(中心点、缩放比例、高度等) |
 | `levelLimit` | `Partial<LevelLimitConfig>` | - | 地图层级限制配置(控制可进入的最大层级) |
+| `cityLabelConfig` | `Partial<CityLabelConfig>` | - | 城市标签配置(高度、缩放等) |
 
 ### Events
 
@@ -142,6 +143,11 @@ interface MapLayerConfig {
 
 interface LevelLimitConfig {
   maxLevel: 'province' | 'city' | 'district'  // 可进入的最大层级，默认 'district'（无限制）
+}
+
+interface CityLabelConfig {
+  offsetY: number  // 城市标签Y轴偏移高度，默认 13.5
+  scale: number    // 城市标签缩放比例，默认 0.24
 }
 ```
 
@@ -775,6 +781,207 @@ const userMaxLevel = computed(() => {
 - 当达到限制层级时，点击操作会被静默拦截，控制台会输出警告信息
 - 程序式调用 `focusCity()` 或 `focusDistrict()` 时也会受到限制
 - 未配置 `levelLimit` 时，默认 `maxLevel: 'district'`，即无任何限制
+
+## 🏷️ 城市标签配置
+
+通过 `cityLabelConfig` 属性，你可以调整城市标签的悬浮高度和缩放比例。
+
+### 基本用法
+
+```vue
+<template>
+  <Map3D
+    :city-data="cityData"
+    :city-label-config="{
+      offsetY: 20,
+      scale: 0.3
+    }"
+  />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { Map3D } from 'vue3-china-map-3d'
+import type { CityBoardDatum, CityLabelConfig } from 'vue3-china-map-3d'
+
+const cityData = ref<CityBoardDatum[]>([
+  {
+    name: '杭州市',
+    value: 120,
+    center: [120.153576, 30.287459]
+  }
+])
+</script>
+```
+
+### 配置说明
+
+```typescript
+interface CityLabelConfig {
+  offsetY: number  // 城市标签Y轴偏移高度，默认 13.5
+  scale: number    // 城市标签缩放比例，默认 0.24
+}
+```
+
+**参数详解**:
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `offsetY` | `number` | `13.5` | 标签在Y轴上的偏移高度，控制标签距离光柱顶部的距离 |
+| `scale` | `number` | `0.24` | 标签的缩放比例，控制标签的大小 |
+
+### 使用场景
+
+**1. 调整标签高度**
+```vue
+<template>
+  <!-- 标签更高，更醒目 -->
+  <Map3D
+    :city-data="cityData"
+    :city-label-config="{ offsetY: 20 }"
+  />
+
+  <!-- 标签更低，更贴近地图 -->
+  <Map3D
+    :city-data="cityData"
+    :city-label-config="{ offsetY: 8 }"
+  />
+</template>
+```
+
+**2. 调整标签大小**
+```vue
+<template>
+  <!-- 标签更大，更清晰 -->
+  <Map3D
+    :city-data="cityData"
+    :city-label-config="{ scale: 0.35 }"
+  />
+
+  <!-- 标签更小，更精简 -->
+  <Map3D
+    :city-data="cityData"
+    :city-label-config="{ scale: 0.18 }"
+  />
+</template>
+```
+
+**3. 同时调整高度和大小**
+```vue
+<template>
+  <!-- 创造视觉层次感 -->
+  <Map3D
+    :city-data="cityData"
+    :city-label-config="{
+      offsetY: 18,
+      scale: 0.32
+    }"
+  />
+</template>
+
+<script setup lang="ts">
+import type { CityLabelConfig } from 'vue3-china-map-3d'
+
+// 或使用类型定义
+const labelConfig: CityLabelConfig = {
+  offsetY: 18,
+  scale: 0.32
+}
+</script>
+```
+
+**4. 响应式调整**
+```vue
+<template>
+  <div>
+    <div style="position: absolute; top: 20px; left: 20px; z-index: 10;">
+      <label>
+        标签高度:
+        <input
+          v-model.number="labelOffsetY"
+          type="range"
+          min="5"
+          max="30"
+          step="0.5"
+        />
+        {{ labelOffsetY }}
+      </label>
+      <br>
+      <label>
+        标签大小:
+        <input
+          v-model.number="labelScale"
+          type="range"
+          min="0.1"
+          max="0.5"
+          step="0.02"
+        />
+        {{ labelScale }}
+      </label>
+    </div>
+
+    <Map3D
+      :city-data="cityData"
+      :city-label-config="{
+        offsetY: labelOffsetY,
+        scale: labelScale
+      }"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { Map3D } from 'vue3-china-map-3d'
+import type { CityBoardDatum } from 'vue3-china-map-3d'
+
+const labelOffsetY = ref(13.5)
+const labelScale = ref(0.24)
+
+const cityData = ref<CityBoardDatum[]>([
+  { name: '杭州市', value: 120, center: [120.153576, 30.287459] },
+  { name: '宁波市', value: 95, center: [121.549792, 29.868388] }
+])
+</script>
+```
+
+### 推荐值范围
+
+```typescript
+// 不同风格的配置
+const configs = {
+  // 紧凑型 - 适合信息密集场景
+  compact: {
+    offsetY: 8,
+    scale: 0.18
+  },
+
+  // 标准型 - 默认平衡配置
+  standard: {
+    offsetY: 13.5,
+    scale: 0.24
+  },
+
+  // 醒目型 - 适合重点展示
+  prominent: {
+    offsetY: 20,
+    scale: 0.35
+  },
+
+  // 超大型 - 适合大屏展示
+  large: {
+    offsetY: 25,
+    scale: 0.45
+  }
+}
+```
+
+### 注意事项
+
+- `offsetY` 值过大可能导致标签超出视野，建议范围：5-30
+- `scale` 值过小会导致标签不易阅读，建议范围：0.15-0.5
+- 两个参数通常需要配合调整：高度越高的标签，scale 也应适当增大
+- 配置会影响所有城市标签，如需个别城市不同样式，请使用 `cityLabelRenderer` 自定义渲染
 
 ## 🛠️ 本地开发
 

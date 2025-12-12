@@ -49,6 +49,16 @@ export interface LevelLimitConfig {
   maxLevel: 'province' | 'city' | 'district'
 }
 
+export interface CityLabelConfig {
+  offsetY: number  // 城市标签Y轴偏移高度，默认 13.5
+  scale: number    // 城市标签缩放比例，默认 0.24
+}
+
+export const DEFAULT_CITY_LABEL_CONFIG: CityLabelConfig = {
+  offsetY: 13.5,
+  scale: 0.24,
+}
+
 export const MAP_LAYER_CONFIG: MapLayerConfig = {
   center: [120.153576, 29.287459],
   scale: 850,
