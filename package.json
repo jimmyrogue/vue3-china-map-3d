@@ -1,6 +1,6 @@
 {
   "name": "vue3-china-map-3d",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "private": false,
   "description": "Vue 3 + Three.js 中国省份3D地图组件",
   "type": "module",
